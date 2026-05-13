@@ -1,0 +1,1883 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TABS Holland en Houtproducten - Klantportaal</title>
+<!--
+  ============================================================
+  POWER PAGES eCOMMERCE DEMO - SINGLE FILE
+  ============================================================
+  Doel: Klikbare demo van een Power Pages eCommerce oplossing
+        gekoppeld aan Dynamics 365 F&O via Dataverse virtuele
+        tabellen, met realtime prijs-API en F&O-orderintegratie.
+
+  Hergebruik voor andere klanten:
+  --------------------------------
+  Pas alleen het CONFIG object onderaan (in <script>) aan:
+    - CONFIG.company   : naam, logo, contact
+    - CONFIG.branding  : kleuren (via CSS variables)
+    - CONFIG.customer  : ingelogde klant
+    - CONFIG.categories: artikelgroepen
+    - CONFIG.products  : artikelen
+    - CONFIG.orders    : historische orders (uit F&O)
+
+  Voor snel hergebruik kan onderaan dit bestand een ready-to-use
+  "klant-aanpassingsprompt" worden gebruikt (zie bottom comment).
+  ============================================================
+-->
+<style>
+  /* ============================================================
+     CSS VARIABLES - centraal aan te passen voor branding
+     ============================================================ */
+  :root {
+    --color-primary:        #5C3D2E;   /* Donker hout */
+    --color-primary-hover:  #44291D;
+    --color-accent:         #B8895F;   /* Warme amber */
+    --color-accent-light:   #EFE4D6;   /* Cream */
+    --color-bg:             #F5F3F0;   /* Pagina-achtergrond */
+    --color-surface:        #FFFFFF;   /* Cards */
+    --color-text:           #2B2B2B;
+    --color-text-muted:     #6B6B6B;
+    --color-border:         #E1DDD8;
+    --color-border-strong:  #C9C3BC;
+    --color-success:        #2E7D32;
+    --color-info:           #1565C0;
+    --color-warning:        #ED6C02;
+    --color-danger:         #C62828;
+    --color-table-stripe:   #FAF8F5;
+
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 2px 8px rgba(0,0,0,0.06);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.10);
+
+    --radius-sm: 2px;
+    --radius-md: 4px;
+    --radius-lg: 8px;
+
+    --font-family: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-family);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--color-text);
+    background: var(--color-bg);
+    min-height: 100vh;
+  }
+
+  a { color: var(--color-primary); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  h1, h2, h3, h4 { margin: 0 0 12px; color: var(--color-text); font-weight: 600; }
+  h1 { font-size: 26px; }
+  h2 { font-size: 20px; }
+  h3 { font-size: 16px; letter-spacing: 0.3px; text-transform: uppercase; color: var(--color-text-muted); }
+  h4 { font-size: 15px; }
+  p { margin: 0 0 12px; }
+
+  /* ============================================================
+     HEADER
+     ============================================================ */
+  .site-header {
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    padding: 18px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .site-header .logo { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+  .site-header .logo-icon {
+    width: 44px; height: 44px;
+    background: var(--color-primary);
+    border-radius: var(--radius-md);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .site-header .logo-icon::before,
+  .site-header .logo-icon::after {
+    content: '';
+    position: absolute;
+    left: 6px; right: 6px;
+    height: 2px;
+    background: var(--color-accent);
+  }
+  .site-header .logo-icon::before { top: 14px; }
+  .site-header .logo-icon::after  { bottom: 14px; }
+  .site-header .logo-icon span {
+    color: var(--color-accent-light);
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: 1px;
+  }
+  .site-header .logo-text {
+    font-size: 18px; font-weight: 700; color: var(--color-primary);
+    letter-spacing: 0.5px;
+  }
+  .site-header .logo-text small {
+    display: block;
+    font-size: 11px; font-weight: 400;
+    color: var(--color-text-muted);
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+  .site-header .user-info {
+    text-align: right;
+    font-size: 13px;
+    color: var(--color-text-muted);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .site-header .user-info .user-text { line-height: 1.4; }
+  .site-header .user-info .user-text strong { color: var(--color-text); font-weight: 600; }
+  .site-header .user-icon {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--color-accent-light);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+  .site-header .cart-icon {
+    position: relative;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--color-accent-light);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--color-primary);
+    cursor: pointer;
+  }
+  .site-header .cart-badge {
+    position: absolute;
+    top: -4px; right: -4px;
+    background: var(--color-danger);
+    color: white;
+    font-size: 10px; font-weight: 700;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ============================================================
+     NAV BAR
+     ============================================================ */
+  .site-nav {
+    background: var(--color-primary);
+    padding: 0 32px;
+    display: flex;
+    gap: 4px;
+  }
+  .site-nav a {
+    color: white;
+    padding: 14px 24px;
+    font-weight: 500;
+    font-size: 14px;
+    border-bottom: 3px solid transparent;
+    transition: background 0.15s;
+  }
+  .site-nav a:hover { background: var(--color-primary-hover); text-decoration: none; }
+  .site-nav a.active {
+    background: var(--color-primary-hover);
+    border-bottom-color: var(--color-accent);
+  }
+
+  /* ============================================================
+     BREADCRUMB
+     ============================================================ */
+  .breadcrumb {
+    background: var(--color-accent-light);
+    padding: 10px 32px;
+    font-size: 13px;
+    color: var(--color-text-muted);
+  }
+  .breadcrumb a { color: var(--color-primary); }
+  .breadcrumb span { margin: 0 8px; color: var(--color-border-strong); }
+
+  /* ============================================================
+     CONTAINER & GENERIC LAYOUT
+     ============================================================ */
+  .container { max-width: 1240px; margin: 0 auto; padding: 24px 32px; }
+
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-sidebar { display: grid; grid-template-columns: 280px 1fr; gap: 24px; }
+
+  .card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 20px 22px;
+    box-shadow: var(--shadow-sm);
+  }
+  .card-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+    border-bottom: 2px solid var(--color-accent);
+  }
+  .card-footer-link {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--color-border);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  /* ============================================================
+     BUTTONS
+     ============================================================ */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 18px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    color: var(--color-text);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn:hover { background: var(--color-bg); }
+  .btn-primary {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+  }
+  .btn-primary:hover { background: var(--color-primary-hover); border-color: var(--color-primary-hover); }
+  .btn-secondary {
+    background: var(--color-surface);
+    color: var(--color-primary);
+    border: 1px solid var(--color-border-strong);
+  }
+  .btn-secondary:hover { background: var(--color-accent-light); }
+  .btn-sm { padding: 5px 12px; font-size: 13px; }
+  .btn-lg { padding: 12px 28px; font-size: 15px; }
+  .btn-block { display: flex; width: 100%; }
+
+  /* ============================================================
+     FORMS
+     ============================================================ */
+  .form-group { margin-bottom: 16px; }
+  .form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--color-text);
+  }
+  .form-group .required { color: var(--color-danger); }
+  .form-control {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 14px;
+    background: var(--color-surface);
+  }
+  .form-control:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(92, 61, 46, 0.15);
+  }
+  .form-row { display: grid; grid-template-columns: 200px 1fr; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--color-border); }
+  .form-row label { font-weight: 500; color: var(--color-text); }
+  .form-row .value { color: var(--color-text); }
+  .form-row:last-child { border-bottom: none; }
+  .form-section-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 10px 0 6px;
+    border-bottom: 2px solid var(--color-accent);
+    margin-bottom: 12px;
+  }
+
+  /* ============================================================
+     TABLES
+     ============================================================ */
+  table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+  }
+  table.data-table th {
+    background: var(--color-accent-light);
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-text);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--color-border-strong);
+  }
+  table.data-table td {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 14px;
+  }
+  table.data-table tr:nth-child(even) td { background: var(--color-table-stripe); }
+  table.data-table tr:hover td { background: var(--color-accent-light); }
+
+  /* ============================================================
+     STATUS BADGES
+     ============================================================ */
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .badge-success { background: #E8F5E9; color: var(--color-success); }
+  .badge-info    { background: #E3F2FD; color: var(--color-info); }
+  .badge-warning { background: #FFF3E0; color: var(--color-warning); }
+  .badge-muted   { background: var(--color-border); color: var(--color-text-muted); }
+
+  /* ============================================================
+     LANDING PAGE (public)
+     ============================================================ */
+  .landing-hero {
+    background:
+      linear-gradient(135deg, rgba(92,61,46,0.88) 0%, rgba(68,41,29,0.78) 100%),
+      radial-gradient(circle at 20% 20%, rgba(184,137,95,0.4) 0%, transparent 50%);
+    background-color: var(--color-primary);
+    color: white;
+    padding: 100px 32px 90px;
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+  }
+  .landing-hero::before {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0; right: -5%;
+    width: 50%;
+    background: repeating-linear-gradient(
+      180deg,
+      rgba(184,137,95,0.18) 0px,
+      rgba(184,137,95,0.18) 10px,
+      transparent 10px,
+      transparent 22px
+    );
+    transform: skewX(-12deg);
+    pointer-events: none;
+  }
+  .landing-hero .container { padding: 0 32px; max-width: 1240px; position: relative; }
+  .landing-hero h1 {
+    color: white;
+    font-size: 44px;
+    line-height: 1.15;
+    max-width: 720px;
+    margin-bottom: 18px;
+  }
+  .landing-hero .tagline {
+    font-size: 19px;
+    color: rgba(255,255,255,0.85);
+    max-width: 600px;
+    margin-bottom: 30px;
+  }
+  .landing-hero .cta-row { display: flex; gap: 12px; }
+  .landing-hero .btn-primary {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+  .landing-hero .btn-primary:hover {
+    background: white; border-color: white;
+  }
+  .landing-hero .btn-secondary {
+    background: transparent;
+    color: white;
+    border-color: rgba(255,255,255,0.5);
+  }
+  .landing-hero .btn-secondary:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: white;
+  }
+
+  .landing-features {
+    background: var(--color-bg);
+    padding: 60px 32px;
+  }
+  .landing-features .container { padding: 0; }
+  .landing-features h2 { font-size: 24px; margin-bottom: 8px; }
+  .landing-features .subtitle { color: var(--color-text-muted); margin-bottom: 36px; }
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .feature-item {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-left: 3px solid var(--color-accent);
+    border-radius: var(--radius-md);
+    padding: 22px 22px 18px;
+  }
+  .feature-item .icon {
+    width: 36px; height: 36px;
+    background: var(--color-accent-light);
+    border-radius: var(--radius-md);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--color-primary);
+    margin-bottom: 12px;
+  }
+  .feature-item h4 { font-size: 15px; margin-bottom: 6px; }
+  .feature-item p { font-size: 13px; color: var(--color-text-muted); margin: 0; }
+
+  .landing-footer {
+    background: #2B1F17;
+    color: rgba(255,255,255,0.7);
+    padding: 28px 32px;
+    text-align: center;
+    font-size: 13px;
+  }
+
+  /* ============================================================
+     LOGIN PAGE
+     ============================================================ */
+  .login-page {
+    min-height: 100vh;
+    background:
+      linear-gradient(135deg, var(--color-primary) 0%, #3A2618 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+  }
+  .login-card {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    padding: 40px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: var(--shadow-lg);
+  }
+  .login-card .logo-row {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 28px;
+  }
+  .login-card h2 { font-size: 22px; margin-bottom: 6px; }
+  .login-card .subtitle { color: var(--color-text-muted); font-size: 13px; margin-bottom: 24px; }
+  .login-card .demo-note {
+    background: var(--color-accent-light);
+    border-left: 3px solid var(--color-accent);
+    padding: 10px 14px;
+    margin-top: 18px;
+    font-size: 12px;
+    color: var(--color-text-muted);
+    border-radius: var(--radius-sm);
+  }
+
+  /* ============================================================
+     DASHBOARD
+     ============================================================ */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .kpi-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-left: 4px solid var(--color-accent);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+  }
+  .kpi-card .label {
+    font-size: 12px;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .kpi-card .value {
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--color-primary);
+    line-height: 1.1;
+  }
+  .kpi-card .delta {
+    font-size: 12px;
+    margin-top: 4px;
+    color: var(--color-success);
+  }
+  .kpi-card.warn { border-left-color: var(--color-warning); }
+  .kpi-card.warn .value { color: var(--color-warning); }
+  .kpi-card.info { border-left-color: var(--color-info); }
+  .kpi-card.info .value { color: var(--color-info); }
+
+  .list-item {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--color-border);
+    display: grid;
+    grid-template-columns: 26px 1fr auto;
+    gap: 8px;
+    align-items: start;
+  }
+  .list-item:last-child { border-bottom: none; }
+  .list-item .num {
+    color: var(--color-text-muted);
+    font-size: 13px;
+  }
+  .list-item .body { font-size: 13px; }
+  .list-item .body strong { display: block; color: var(--color-text); font-weight: 600; }
+  .list-item .body small { color: var(--color-text-muted); }
+  .list-item .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-top: 6px;
+  }
+  .dot.dot-warning { background: var(--color-warning); }
+  .dot.dot-success { background: var(--color-success); }
+  .dot.dot-info    { background: var(--color-info); }
+  .dot.dot-muted   { background: var(--color-border-strong); }
+
+  .insight-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .insight-row:last-child { border-bottom: none; }
+  .insight-icon {
+    width: 40px; height: 40px;
+    background: var(--color-accent-light);
+    border-radius: var(--radius-md);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--color-primary);
+    flex-shrink: 0;
+  }
+  .insight-row .text { flex: 1; }
+  .insight-row .text strong { display: block; font-size: 14px; }
+  .insight-row .text small { color: var(--color-text-muted); font-size: 12px; }
+
+  /* ============================================================
+     WEBSHOP / CATEGORY TILES
+     ============================================================ */
+  .search-row {
+    display: flex; gap: 12px; margin-bottom: 24px;
+  }
+  .search-input {
+    flex: 1;
+    position: relative;
+  }
+  .search-input input {
+    width: 100%;
+    padding: 12px 16px 12px 42px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 14px;
+    background: var(--color-surface);
+  }
+  .search-input .icon {
+    position: absolute;
+    left: 14px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-muted);
+  }
+
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  .category-tile {
+    background: var(--color-primary);
+    color: white;
+    border-radius: var(--radius-md);
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 20px;
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+  }
+  .category-tile::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 0%, rgba(184,137,95,0.15) 100%);
+    pointer-events: none;
+  }
+  .category-tile:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    background: var(--color-primary-hover);
+  }
+  .category-tile .cat-icon {
+    color: var(--color-accent);
+    margin-bottom: 14px;
+  }
+  .category-tile .cat-name {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .category-tile .cat-desc {
+    font-size: 11px;
+    color: rgba(255,255,255,0.65);
+    margin-top: 6px;
+    line-height: 1.3;
+  }
+
+  /* Sidebar */
+  .sidebar { display: flex; flex-direction: column; gap: 16px; }
+  .sidebar-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 16px 18px;
+  }
+  .sidebar-card h3 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+    border-bottom: 2px solid var(--color-accent);
+  }
+  .sidebar-card .cat-link {
+    display: block;
+    padding: 6px 0;
+    font-size: 13px;
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-border);
+    cursor: pointer;
+  }
+  .sidebar-card .cat-link:hover { color: var(--color-primary); }
+  .sidebar-card .cat-link:last-child { border-bottom: none; }
+  .sidebar-card .cat-link.active { color: var(--color-primary); font-weight: 600; }
+
+  /* ============================================================
+     ARTICLE / ORDER FORM
+     ============================================================ */
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--color-primary);
+    font-size: 13px;
+    margin-bottom: 14px;
+    cursor: pointer;
+  }
+  .back-link:hover { text-decoration: underline; }
+
+  .article-header {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 22px 26px;
+    margin-bottom: 20px;
+  }
+  .article-header .product-id {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    margin-bottom: 6px;
+  }
+  .article-header h1 { margin-bottom: 6px; }
+  .article-header .meta { color: var(--color-text-muted); font-size: 14px; }
+
+  .price-display {
+    background: var(--color-accent-light);
+    border-left: 3px solid var(--color-accent);
+    padding: 14px 18px;
+    margin: 20px 0;
+    border-radius: var(--radius-sm);
+  }
+  .price-display .label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--color-text-muted);
+  }
+  .price-display .price {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--color-primary);
+  }
+  .price-display .loading { font-style: italic; color: var(--color-text-muted); }
+
+  .button-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+  }
+
+  /* ============================================================
+     CART
+     ============================================================ */
+  .cart-item {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 18px 22px;
+    margin-bottom: 14px;
+    position: relative;
+  }
+  .cart-item .item-header {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .cart-item .item-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 18px;
+  }
+  .cart-item .item-details .label {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    margin-bottom: 2px;
+  }
+  .cart-item .item-details .value { font-size: 14px; font-weight: 500; }
+  .cart-item .remove-btn {
+    background: transparent;
+    border: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    padding: 4px;
+  }
+  .cart-item .remove-btn:hover { color: var(--color-danger); }
+
+  .cart-summary {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 22px;
+    margin-top: 20px;
+  }
+  .cart-summary .summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 14px;
+  }
+  .cart-summary .summary-row.total {
+    border-top: 2px solid var(--color-accent);
+    padding-top: 14px;
+    margin-top: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-primary);
+  }
+
+  /* ============================================================
+     CONFIRMATION
+     ============================================================ */
+  .confirmation {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 60px 40px;
+    text-align: center;
+    max-width: 600px;
+    margin: 40px auto;
+  }
+  .confirmation .check-icon {
+    width: 80px; height: 80px;
+    background: #E8F5E9;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center; justify-content: center;
+    color: var(--color-success);
+    margin-bottom: 24px;
+  }
+  .confirmation h1 { color: var(--color-primary); margin-bottom: 10px; }
+  .confirmation .order-num {
+    display: inline-block;
+    background: var(--color-accent-light);
+    padding: 8px 18px;
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    color: var(--color-primary);
+    margin: 16px 0;
+    letter-spacing: 1px;
+  }
+
+  /* ============================================================
+     EMPTY STATE
+     ============================================================ */
+  .empty-state {
+    background: var(--color-surface);
+    border: 1px dashed var(--color-border-strong);
+    border-radius: var(--radius-md);
+    padding: 50px 30px;
+    text-align: center;
+    color: var(--color-text-muted);
+  }
+
+  /* ============================================================
+     UTILITY & RESPONSIVE
+     ============================================================ */
+  .hidden { display: none !important; }
+  .flex-row { display: flex; align-items: center; justify-content: space-between; }
+  .text-muted { color: var(--color-text-muted); }
+  .text-right { text-align: right; }
+  .mt-1 { margin-top: 8px; }
+  .mt-2 { margin-top: 16px; }
+  .mt-3 { margin-top: 24px; }
+
+  @media (max-width: 980px) {
+    .grid-3, .grid-2 { grid-template-columns: 1fr; }
+    .grid-sidebar { grid-template-columns: 1fr; }
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    .category-grid { grid-template-columns: repeat(2, 1fr); }
+    .feature-grid { grid-template-columns: 1fr; }
+    .site-header { padding: 14px 18px; flex-direction: column; gap: 14px; }
+    .site-nav { padding: 0 8px; overflow-x: auto; }
+    .container { padding: 16px; }
+    .landing-hero h1 { font-size: 32px; }
+    .cart-item .item-details { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     PAGE: LANDING (public)
+     ============================================================ -->
+<div id="page-landing" class="page-public">
+  <header class="site-header">
+    <div class="logo">
+      <div class="logo-icon"><span>TH</span></div>
+      <div class="logo-text">
+        TABS Holland
+        <small>Houtproducten sinds 1952</small>
+      </div>
+    </div>
+    <div>
+      <button class="btn btn-secondary" onclick="navigate('login')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        Inloggen klantportaal
+      </button>
+    </div>
+  </header>
+
+  <section class="landing-hero">
+    <div class="container">
+      <h1>Kwaliteitshout, betrouwbaar geleverd.</h1>
+      <p class="tagline">Al meer dan 70 jaar partner van aannemers, bouwbedrijven en installateurs in Nederland. Bestel snel via uw klantportaal — direct gekoppeld aan onze voorraad en planning.</p>
+      <div class="cta-row">
+        <button class="btn btn-primary btn-lg" onclick="navigate('login')">Naar het klantportaal</button>
+        <button class="btn btn-secondary btn-lg" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">Meer informatie</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-features" id="features">
+    <div class="container">
+      <h2>Uw klantportaal in één oogopslag</h2>
+      <p class="subtitle">Direct toegang tot uw afspraken, prijzen en orders.</p>
+      <div class="feature-grid">
+        <div class="feature-item">
+          <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg></div>
+          <h4>Uw assortiment</h4>
+          <p>U ziet alleen de artikelen die voor u relevant zijn, op basis van uw handelsafspraken en contracten.</p>
+        </div>
+        <div class="feature-item">
+          <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+          <h4>Realtime prijzen</h4>
+          <p>Prijzen worden live opgehaald, inclusief uw afspraken, staffels en lopende acties.</p>
+        </div>
+        <div class="feature-item">
+          <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg></div>
+          <h4>Snel bestellen</h4>
+          <p>Plaats orders rechtstreeks vanuit het portaal. Status en orderhistorie altijd inzichtelijk.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="landing-footer">
+    TABS Holland en Houtproducten B.V. &nbsp;·&nbsp; Industrieweg 12, 1014 AB Amsterdam &nbsp;·&nbsp; +31 (0)20 123 4567 &nbsp;·&nbsp; info@tabsholland.nl
+  </footer>
+</div>
+
+<!-- ============================================================
+     PAGE: LOGIN
+     ============================================================ -->
+<div id="page-login" class="page-public hidden">
+  <div class="login-page">
+    <div class="login-card">
+      <div class="logo-row">
+        <div class="logo-icon" style="width:36px;height:36px;background:var(--color-primary);border-radius:4px;display:flex;align-items:center;justify-content:center;position:relative;">
+          <span style="color:var(--color-accent-light);font-weight:700;font-size:13px;letter-spacing:1px;">TH</span>
+        </div>
+        <div style="font-weight:700;font-size:16px;color:var(--color-primary);">TABS Holland Klantportaal</div>
+      </div>
+      <h2>Inloggen</h2>
+      <p class="subtitle">Gebruik uw e-mailadres en wachtwoord om in te loggen.</p>
+
+      <div class="form-group">
+        <label>E-mailadres</label>
+        <input type="email" class="form-control" id="login-email" placeholder="naam@bedrijf.nl" value="p.bakker@bakkerbouw.nl">
+      </div>
+      <div class="form-group">
+        <label>Wachtwoord</label>
+        <input type="password" class="form-control" id="login-pw" value="demo">
+      </div>
+      <button class="btn btn-primary btn-block" onclick="login()">Inloggen</button>
+
+      <div class="demo-note">
+        <strong>Demo modus:</strong> Elke invoer werkt — klik gewoon op Inloggen.
+      </div>
+
+      <div class="mt-3" style="text-align:center;font-size:13px;">
+        <a href="#" onclick="navigate('landing');return false;">← Terug naar website</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     APP (authenticated shell)
+     ============================================================ -->
+<div id="app" class="hidden">
+  <header class="site-header">
+    <div class="logo" onclick="navigate('dashboard')">
+      <div class="logo-icon"><span>TH</span></div>
+      <div class="logo-text">
+        TABS Holland
+        <small>Klantportaal</small>
+      </div>
+    </div>
+    <div class="user-info">
+      <div class="user-text">
+        Welkom <strong id="user-name">—</strong><br>
+        <span id="user-account">—</span>
+      </div>
+      <div class="user-icon" title="Account" onclick="logout()" style="cursor:pointer;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <div class="cart-icon" onclick="navigate('cart')" title="Winkelwagen">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        <span class="cart-badge hidden" id="cart-badge">0</span>
+      </div>
+    </div>
+  </header>
+
+  <nav class="site-nav">
+    <a id="nav-dashboard" onclick="navigate('dashboard')">Home</a>
+    <a id="nav-webshop"   onclick="navigate('webshop')">Webshop</a>
+    <a id="nav-orders"    onclick="navigate('orders')">Bestellingen</a>
+    <a onclick="alert('Service-pagina (niet uitgewerkt in demo)')">Service</a>
+    <a onclick="alert('Contact-pagina (niet uitgewerkt in demo)')">Contact</a>
+  </nav>
+
+  <div id="breadcrumb" class="breadcrumb hidden"></div>
+
+  <main>
+    <!-- ============================================================
+         APP PAGE: DASHBOARD
+         ============================================================ -->
+    <div id="page-dashboard" class="page-app">
+      <div class="container">
+        <h1>Welkom terug, <span id="dashboard-firstname">—</span></h1>
+        <p class="text-muted">Hier vindt u uw lopende orders, recente leveringen en belangrijke meldingen.</p>
+
+        <div class="kpi-row mt-3" id="kpi-row"></div>
+
+        <div class="grid-3 mt-3">
+          <div class="card">
+            <div class="card-title">Lopende bestellingen</div>
+            <div id="dashboard-open-orders"></div>
+            <div class="card-footer-link"><a onclick="navigate('orders')">Toon alle bestellingen →</a></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Meldingen</div>
+            <div id="dashboard-notifications"></div>
+            <div class="card-footer-link"><a onclick="alert('Meldingen overzicht (demo)')">Toon alle meldingen →</a></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Inzichten</div>
+            <div id="dashboard-insights"></div>
+            <div class="card-footer-link"><a onclick="alert('Inzichten overzicht (demo)')">Toon alle inzichten →</a></div>
+          </div>
+        </div>
+
+        <div class="grid-3 mt-3">
+          <div class="card">
+            <div class="card-title">Snelle acties</div>
+            <button class="btn btn-secondary btn-block mt-1" onclick="navigate('webshop')">📦 Nieuwe bestelling</button>
+            <button class="btn btn-secondary btn-block mt-1" onclick="navigate('orders')">📋 Mijn bestellingen</button>
+            <button class="btn btn-secondary btn-block mt-1" onclick="alert('Facturen overzicht (demo)')">🧾 Facturen inzien</button>
+          </div>
+          <div class="card">
+            <div class="card-title">Accountmanager</div>
+            <div style="display:flex;gap:14px;align-items:center;margin-top:6px;">
+              <div style="width:50px;height:50px;border-radius:50%;background:var(--color-accent-light);display:flex;align-items:center;justify-content:center;color:var(--color-primary);font-weight:700;font-size:18px;" id="am-initials">—</div>
+              <div>
+                <strong id="am-name">—</strong><br>
+                <small class="text-muted" id="am-phone">—</small><br>
+                <small class="text-muted" id="am-email">—</small>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Contact</div>
+            <p style="font-size:13px;margin-bottom:6px;"><strong id="contact-company">—</strong></p>
+            <p style="font-size:13px;margin:0;color:var(--color-text-muted);" id="contact-address">—</p>
+            <p style="font-size:13px;margin:8px 0 0;"><strong>T</strong> <span id="contact-phone">—</span></p>
+            <p style="font-size:13px;margin:0;"><strong>E</strong> <span id="contact-email">—</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         APP PAGE: WEBSHOP
+         ============================================================ -->
+    <div id="page-webshop" class="page-app hidden">
+      <div class="container">
+        <h1>Webshop</h1>
+        <p class="text-muted">Kies een productgroep om te bestellen. U ziet alleen artikelen die binnen uw handelsafspraken vallen.</p>
+
+        <div class="grid-sidebar mt-3">
+          <div class="sidebar">
+            <div class="sidebar-card">
+              <h3>★ Favorieten</h3>
+              <div class="text-muted" style="font-size:13px;">Geen favorieten gevonden.</div>
+            </div>
+            <div class="sidebar-card">
+              <h3>Lopende bestellingen</h3>
+              <div id="sidebar-open-orders"></div>
+            </div>
+            <div class="sidebar-card">
+              <h3>Quick links</h3>
+              <a class="cat-link" onclick="navigate('orders')">Mijn bestellingen</a>
+              <a class="cat-link" onclick="navigate('cart')">Winkelwagen</a>
+              <a class="cat-link" onclick="alert('Voorwaarden (demo)')">Leveringsvoorwaarden</a>
+            </div>
+          </div>
+          <div>
+            <div class="search-row">
+              <div class="search-input">
+                <span class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+                <input type="text" placeholder="Typ om te beginnen met zoeken..." id="webshop-search">
+              </div>
+            </div>
+            <div class="category-grid" id="category-grid"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         APP PAGE: CATEGORY (article list)
+         ============================================================ -->
+    <div id="page-category" class="page-app hidden">
+      <div class="container">
+        <a class="back-link" onclick="navigate('webshop')">← Terug naar webshop</a>
+
+        <div class="grid-sidebar mt-2">
+          <div class="sidebar">
+            <div class="sidebar-card">
+              <h3>Categorieën</h3>
+              <div id="category-list-sidebar"></div>
+            </div>
+          </div>
+          <div>
+            <h1 id="category-title">—</h1>
+            <p class="text-muted" id="category-desc">—</p>
+            <div class="search-row mt-2">
+              <div class="search-input">
+                <span class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+                <input type="text" placeholder="Zoeken in deze categorie..." id="category-search" oninput="renderCategoryProducts()">
+              </div>
+            </div>
+
+            <table class="data-table" id="category-table">
+              <thead>
+                <tr>
+                  <th>Artikel</th>
+                  <th>Artikelnr.</th>
+                  <th>Eenheid</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="category-products"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         APP PAGE: ARTICLE (order form)
+         ============================================================ -->
+    <div id="page-article" class="page-app hidden">
+      <div class="container" style="max-width:880px;">
+        <a class="back-link" onclick="navigate('category', state.currentCategory)">← Terug naar artikelen</a>
+
+        <div class="article-header">
+          <div class="product-id" id="article-id">—</div>
+          <h1 id="article-name">—</h1>
+          <div class="meta" id="article-meta">—</div>
+        </div>
+
+        <div class="card">
+          <div class="form-section-title">Productdetails</div>
+          <div class="form-row">
+            <label>Minimale bestelgrootte</label>
+            <div class="value" id="article-min">—</div>
+          </div>
+          <div class="form-row">
+            <label>Te bestellen per</label>
+            <div class="value" id="article-step">—</div>
+          </div>
+          <div class="form-row">
+            <label>Account</label>
+            <div class="value" id="article-account">—</div>
+          </div>
+
+          <div class="form-section-title mt-3">Bestelregel</div>
+          <div class="form-group">
+            <label>Hoeveelheid (<span id="article-unit-label">eh</span>) <span class="required">*</span></label>
+            <input type="number" class="form-control" id="order-qty" min="1" value="1" oninput="fetchPrice()">
+          </div>
+          <div class="form-group">
+            <label>Levermethode <span class="required">*</span></label>
+            <select class="form-control" id="order-delivery">
+              <option>Bezorgen</option>
+              <option>Afhalen filiaal Amsterdam</option>
+              <option>Afhalen filiaal Rotterdam</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Levertermijn <span class="required">*</span></label>
+            <select class="form-control" id="order-term">
+              <option>Binnen 2 werkdagen</option>
+              <option>Binnen 5 werkdagen</option>
+              <option>Week 32</option>
+              <option>Week 33</option>
+              <option>Week 34</option>
+              <option>Specifieke datum</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Opmerking</label>
+            <input type="text" class="form-control" id="order-note" placeholder="Optioneel: instructies voor bezorgen / specificaties">
+          </div>
+
+          <div class="price-display">
+            <div class="label">Prijs per <span id="article-unit-price">eh</span> <span class="text-muted" style="font-size:11px;">(realtime opgehaald uit F&amp;O)</span></div>
+            <div class="price" id="article-price"><span class="loading">Prijs ophalen...</span></div>
+          </div>
+
+          <div class="button-row">
+            <button class="btn btn-primary" onclick="addToCart()">+ Toevoegen aan winkelwagen</button>
+            <button class="btn btn-secondary" onclick="alert('Licentie-check (demo)')">Licenties controleren</button>
+            <button class="btn btn-secondary" onclick="fetchPrice(true)">Prijs opvragen</button>
+            <button class="btn btn-secondary" onclick="alert('Toegevoegd aan favorieten (demo)')">★ Favoriet</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         APP PAGE: CART
+         ============================================================ -->
+    <div id="page-cart" class="page-app hidden">
+      <div class="container" style="max-width:980px;">
+        <h1>Winkelwagen</h1>
+        <p class="text-muted">Controleer uw bestelregels en bevestig om de order door te zetten naar Dynamics 365 F&amp;O.</p>
+
+        <div id="cart-items" class="mt-3"></div>
+
+        <div id="cart-bottom" class="hidden">
+          <div class="card mt-2">
+            <div class="form-section-title">Afleveradres</div>
+            <select class="form-control" id="delivery-address">
+              <option>Hoofdvestiging — Industrieweg 88, 1234 AB Almere</option>
+              <option>Bouwplaats Zuidpark — Stationsweg 12, 1011 AB Amsterdam</option>
+              <option>Magazijn — Havendok 4, 1531 BG Hoofddorp</option>
+            </select>
+          </div>
+
+          <div class="cart-summary">
+            <div class="summary-row"><span>Aantal regels</span><span id="summary-lines">0</span></div>
+            <div class="summary-row"><span>Subtotaal (excl. BTW)</span><span id="summary-subtotal">€ 0,00</span></div>
+            <div class="summary-row"><span>BTW (21%)</span><span id="summary-vat">€ 0,00</span></div>
+            <div class="summary-row total"><span>Totaal</span><span id="summary-total">€ 0,00</span></div>
+          </div>
+
+          <div class="button-row mt-3" style="justify-content:flex-end;">
+            <button class="btn btn-secondary" onclick="navigate('webshop')">← Verder winkelen</button>
+            <button class="btn btn-primary btn-lg" onclick="placeOrder()">Bestelling plaatsen</button>
+          </div>
+          <p class="text-muted mt-2" style="font-size:12px;text-align:right;">Bevestiging triggert een proces dat de regels naar een verkooporder in Dynamics 365 F&amp;O schrijft.</p>
+        </div>
+
+        <div id="cart-empty" class="empty-state hidden">
+          <p>Uw winkelwagen is leeg.</p>
+          <button class="btn btn-primary mt-2" onclick="navigate('webshop')">Naar webshop</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         APP PAGE: CONFIRMATION
+         ============================================================ -->
+    <div id="page-confirmation" class="page-app hidden">
+      <div class="container">
+        <div class="confirmation">
+          <div class="check-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <h1>Bedankt voor uw bestelling!</h1>
+          <p>Uw order is succesvol doorgezet naar Dynamics 365 F&amp;O.<br>U ontvangt zo een orderbevestiging per e-mail.</p>
+          <div class="order-num" id="confirm-order-num">—</div>
+          <p class="text-muted" style="font-size:13px;">De order wordt nu verwerkt in onze planning. Status is direct zichtbaar bij <a onclick="navigate('orders')">Mijn bestellingen</a>.</p>
+          <div class="button-row mt-3" style="justify-content:center;">
+            <button class="btn btn-secondary" onclick="navigate('orders')">Naar orderoverzicht</button>
+            <button class="btn btn-primary" onclick="navigate('dashboard')">Terug naar home</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         APP PAGE: ORDERS (history from F&O)
+         ============================================================ -->
+    <div id="page-orders" class="page-app hidden">
+      <div class="container">
+        <h1>Mijn bestellingen</h1>
+        <p class="text-muted">Overzicht van uw orders, rechtstreeks opgehaald uit Dynamics 365 F&amp;O.</p>
+
+        <div class="card mt-3" style="padding:0;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Ordernr.</th>
+                <th>Besteld op</th>
+                <th>Regels</th>
+                <th>Levering</th>
+                <th>Totaal</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="orders-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+/* ================================================================
+   CONFIG — pas dit aan voor een andere klantdemo
+   ================================================================ */
+const CONFIG = {
+  company: {
+    name: "TABS Holland en Houtproducten",
+    shortName: "TABS Holland",
+    phone: "+31 (0)20 123 4567",
+    email: "info@tabsholland.nl",
+    address: "Industrieweg 12, 1014 AB Amsterdam"
+  },
+  customer: {
+    name: "Pieter Bakker",
+    firstName: "Pieter",
+    company: "Aannemersbedrijf Bakker Bouw B.V.",
+    accountId: "114782",
+    address: "Stationsweg 12, 1011 AB Amsterdam",
+    creditLimit: 75000,
+    creditUsed: 23450,
+    am: {
+      name: "Sandra de Wit",
+      initials: "SW",
+      phone: "+31 (0)20 123 4521",
+      email: "s.dewit@tabsholland.nl"
+    }
+  },
+  categories: [
+    { id: "constructie", name: "Constructiehout", desc: "Vuren, grenen en douglas voor bouw",
+      icon: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="6" width="18" height="4"/><rect x="3" y="14" width="18" height="4"/><line x1="7" y1="6" x2="7" y2="10"/><line x1="14" y1="6" x2="14" y2="10"/><line x1="9" y1="14" x2="9" y2="18"/><line x1="16" y1="14" x2="16" y2="18"/></svg>' },
+    { id: "plaat", name: "Plaatmaterialen", desc: "OSB, MDF, multiplex, spaanplaat",
+      icon: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="14" x2="21" y2="14"/></svg>' },
+    { id: "hardhout", name: "Hardhout", desc: "Eiken, meranti, bankirai, azobé",
+      icon: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L8 8h3v6h-2l3 5 3-5h-2V8h3z"/><line x1="6" y1="22" x2="18" y2="22"/></svg>' },
+    { id: "tuin", name: "Tuinhout", desc: "Schuttingen, vlonders, palen",
+      icon: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="5" y1="22" x2="5" y2="5"/><line x1="10" y1="22" x2="10" y2="5"/><line x1="14" y1="22" x2="14" y2="5"/><line x1="19" y1="22" x2="19" y2="5"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="14" x2="21" y2="14"/><polygon points="5,5 10,2 14,5"/><polygon points="14,5 19,2 21,5"/></svg>' },
+    { id: "gevel", name: "Geveldelen", desc: "Rabat, halfhouts, boeidelen",
+      icon: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="3,10 12,3 21,10 21,21 3,21"/><line x1="3" y1="13" x2="21" y2="13"/><line x1="3" y1="16" x2="21" y2="16"/><line x1="3" y1="19" x2="21" y2="19"/></svg>' },
+    { id: "vloer", name: "Vloeren & Plafonds", desc: "Houten vloeren en plafondplanken",
+      icon: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="3"/><rect x="3" y="9" width="18" height="3"/><rect x="3" y="14" width="18" height="3"/><rect x="3" y="19" width="18" height="2"/></svg>' },
+    { id: "lijst", name: "Lijsten & Plinten", desc: "Plinten, dorpels, afwerklijsten",
+      icon: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="3" width="2" height="18"/><rect x="11" y="3" width="2" height="18"/><rect x="17" y="3" width="2" height="18"/></svg>' },
+    { id: "beslag", name: "Beslag & Bevestiging", desc: "Schroeven, beugels, hang- en sluitwerk",
+      icon: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="6" r="3"/><line x1="12" y1="9" x2="12" y2="21"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>' }
+  ],
+  products: [
+    // Constructiehout
+    { id: "1001234", cat: "constructie", name: "Vurenhout geschaafd 18x95mm",       len: "4,80 m", unit: "stuk", min: 1, step: 1, priceMin: 4.20, priceMax: 5.10 },
+    { id: "1001235", cat: "constructie", name: "Vurenhout geschaafd 22x120mm",      len: "5,40 m", unit: "stuk", min: 1, step: 1, priceMin: 7.80, priceMax: 9.40 },
+    { id: "1001237", cat: "constructie", name: "Vurenhout ruw 50x150mm",            len: "5,40 m", unit: "stuk", min: 1, step: 1, priceMin: 14.50, priceMax: 17.80 },
+    { id: "1001241", cat: "constructie", name: "Douglas regel 45x95mm geschaafd",   len: "3,00 m", unit: "stuk", min: 1, step: 1, priceMin: 9.20, priceMax: 11.40 },
+    { id: "1001248", cat: "constructie", name: "Douglas balk 70x95mm",              len: "4,00 m", unit: "stuk", min: 1, step: 1, priceMin: 18.40, priceMax: 22.10 },
+    { id: "1001253", cat: "constructie", name: "Geïmpregneerd vuren 70x70mm",       len: "3,00 m", unit: "stuk", min: 1, step: 1, priceMin: 11.30, priceMax: 13.80 },
+    { id: "1001260", cat: "constructie", name: "Grenen ruw 32x100mm",               len: "4,80 m", unit: "stuk", min: 1, step: 1, priceMin: 6.10, priceMax: 7.40 },
+    // Plaatmaterialen
+    { id: "1102001", cat: "plaat", name: "OSB-3 plaat 18mm 2440x1220",              len: "", unit: "plaat", min: 1, step: 1, priceMin: 28.40, priceMax: 33.20 },
+    { id: "1102004", cat: "plaat", name: "OSB-3 plaat 22mm 2440x1220",              len: "", unit: "plaat", min: 1, step: 1, priceMin: 34.50, priceMax: 39.80 },
+    { id: "1102010", cat: "plaat", name: "MDF plaat standaard 12mm 2440x1220",      len: "", unit: "plaat", min: 1, step: 1, priceMin: 22.80, priceMax: 26.40 },
+    { id: "1102014", cat: "plaat", name: "MDF plaat vochtwerend 18mm 2440x1220",    len: "", unit: "plaat", min: 1, step: 1, priceMin: 38.60, priceMax: 43.90 },
+    { id: "1102020", cat: "plaat", name: "Multiplex berken 18mm 2500x1250",         len: "", unit: "plaat", min: 1, step: 1, priceMin: 89.50, priceMax: 102.00 },
+    { id: "1102025", cat: "plaat", name: "Multiplex okoumé 12mm 2500x1220",         len: "", unit: "plaat", min: 1, step: 1, priceMin: 54.30, priceMax: 62.80 },
+    { id: "1102030", cat: "plaat", name: "Spaanplaat 18mm 2440x1220",               len: "", unit: "plaat", min: 1, step: 1, priceMin: 18.20, priceMax: 21.30 },
+    // Hardhout
+    { id: "1203001", cat: "hardhout", name: "Eiken plank geschaafd 27x140mm",       len: "3,00 m", unit: "stuk", min: 1, step: 1, priceMin: 48.50, priceMax: 56.20 },
+    { id: "1203005", cat: "hardhout", name: "Eiken balk 100x100mm",                 len: "3,00 m", unit: "stuk", min: 1, step: 1, priceMin: 124.00, priceMax: 141.50 },
+    { id: "1203010", cat: "hardhout", name: "Meranti deurkozijn 67x114mm",          len: "5,40 m", unit: "stuk", min: 1, step: 1, priceMin: 72.30, priceMax: 84.10 },
+    { id: "1203015", cat: "hardhout", name: "Bankirai vlonderplank 25x145mm",       len: "3,05 m", unit: "stuk", min: 1, step: 1, priceMin: 21.40, priceMax: 24.80 },
+    { id: "1203020", cat: "hardhout", name: "Azobé balk 100x100mm",                 len: "3,00 m", unit: "stuk", min: 1, step: 1, priceMin: 138.50, priceMax: 159.30 },
+    // Tuinhout
+    { id: "1304001", cat: "tuin", name: "Schuttingplank vuren 16x140mm",            len: "1,80 m", unit: "stuk", min: 1, step: 1, priceMin: 3.20, priceMax: 3.95 },
+    { id: "1304005", cat: "tuin", name: "Tuinpaal douglas 70x70mm",                 len: "2,70 m", unit: "stuk", min: 1, step: 1, priceMin: 14.80, priceMax: 17.20 },
+    { id: "1304010", cat: "tuin", name: "Geïmpregneerde paal 100x100mm",            len: "2,70 m", unit: "stuk", min: 1, step: 1, priceMin: 22.40, priceMax: 26.10 },
+    { id: "1304015", cat: "tuin", name: "Vlonderplank vuren geïmpregneerd 28x145", len: "3,00 m", unit: "stuk", min: 1, step: 1, priceMin: 8.90, priceMax: 10.40 },
+    // Geveldelen
+    { id: "1405001", cat: "gevel", name: "Rabatdeel douglas 22x180mm",              len: "4,80 m", unit: "stuk", min: 1, step: 1, priceMin: 16.40, priceMax: 19.20 },
+    { id: "1405005", cat: "gevel", name: "Halfhouts vuren 18x140mm",                len: "4,80 m", unit: "stuk", min: 1, step: 1, priceMin: 12.10, priceMax: 14.30 },
+    { id: "1405010", cat: "gevel", name: "Boeideel meranti 18x195mm",               len: "4,00 m", unit: "stuk", min: 1, step: 1, priceMin: 28.50, priceMax: 33.40 },
+    // Vloeren
+    { id: "1506001", cat: "vloer", name: "Eiken planken vloer 21x190mm",            len: "1,90 m", unit: "pak (1,44 m²)", min: 1, step: 1, priceMin: 89.40, priceMax: 102.50 },
+    { id: "1506005", cat: "vloer", name: "Vurenhouten vloerdeel 28x140mm",          len: "4,80 m", unit: "stuk", min: 1, step: 1, priceMin: 12.30, priceMax: 14.40 },
+    // Lijsten
+    { id: "1607001", cat: "lijst", name: "Plint MDF wit 12x70mm",                   len: "2,40 m", unit: "stuk", min: 1, step: 1, priceMin: 4.10, priceMax: 4.95 },
+    { id: "1607005", cat: "lijst", name: "Architraaf hardhout 14x68mm",             len: "2,40 m", unit: "stuk", min: 1, step: 1, priceMin: 8.30, priceMax: 9.85 },
+    // Beslag
+    { id: "1708001", cat: "beslag", name: "Houtschroef RVS A2 5x60mm (100 stuks)",  len: "", unit: "doos", min: 1, step: 1, priceMin: 12.40, priceMax: 14.20 },
+    { id: "1708005", cat: "beslag", name: "Verzinkte hoekbeugel 90x90x65mm",         len: "", unit: "stuk", min: 1, step: 1, priceMin: 1.85, priceMax: 2.20 },
+    { id: "1708010", cat: "beslag", name: "Balkdrager verzinkt 96x176mm",            len: "", unit: "stuk", min: 1, step: 1, priceMin: 8.40, priceMax: 9.80 }
+  ],
+  // Mock orders (zoals ze uit F&O zouden komen)
+  orders: [
+    { id: "SO-2026-04812", date: "11-05-2026", lines: 4, delivery: "Week 21", total: 1842.50, status: "In behandeling", statusType: "info" },
+    { id: "SO-2026-04786", date: "06-05-2026", lines: 2, delivery: "08-05-2026", total: 384.20, status: "Geleverd", statusType: "success" },
+    { id: "SO-2026-04754", date: "29-04-2026", lines: 7, delivery: "02-05-2026", total: 2418.90, status: "Geleverd", statusType: "success" },
+    { id: "SO-2026-04721", date: "22-04-2026", lines: 3, delivery: "Week 19", total: 612.40, status: "Klaar voor levering", statusType: "warning" },
+    { id: "SO-2026-04687", date: "15-04-2026", lines: 5, delivery: "17-04-2026", total: 1108.75, status: "Geleverd", statusType: "success" }
+  ],
+  openOrders: [
+    { num: "Vurenhout geschaafd 18x95mm",  detail: "1001234 — Binnen 2 werkdagen", dot: "warning" },
+    { num: "OSB-3 plaat 18mm 2440x1220",   detail: "1102001 — Week 21",             dot: "info" },
+    { num: "Bankirai vlonderplank 25x145", detail: "1203015 — Binnen 5 werkdagen",  dot: "warning" },
+    { num: "Plint MDF wit 12x70mm",        detail: "1607001 — Geleverd 06-05",      dot: "success" }
+  ],
+  notifications: [
+    { title: "Levering ingepland",      sub: "SO-2026-04812 — vrijdag 16 mei",            dot: "info" },
+    { title: "Prijslijst geüpdatet",    sub: "Nieuwe prijzen plaatmateriaal per 12 mei",  dot: "muted" },
+    { title: "Bouwvakplanning beschikbaar", sub: "Sluitingstijden week 30-32 gepubliceerd", dot: "muted" },
+    { title: "Factuur klaar",           sub: "F-2026-3318 — vervaldatum 24 mei",          dot: "warning" }
+  ],
+  insights: [
+    { icon: "📦", title: "Mijn aankopen",   sub: "YTD: € 23.450 — 47 orders" },
+    { icon: "🚚", title: "Mijn leveringen", sub: "Volgende: 16 mei (Week 20)" },
+    { icon: "🧾", title: "Mijn facturen",   sub: "1 open — € 2.418,90" },
+    { icon: "💳", title: "Kredietruimte",   sub: "€ 51.550 beschikbaar van € 75.000" }
+  ]
+};
+
+/* ================================================================
+   STATE
+   ================================================================ */
+let state = {
+  currentPage: "landing",
+  currentCategory: null,
+  currentArticle: null,
+  currentPrice: null,
+  cart: [],
+  orderCounter: 4813
+};
+
+/* ================================================================
+   PAGE NAVIGATION
+   ================================================================ */
+function navigate(page, param) {
+  // verberg alle pagina's
+  document.querySelectorAll('.page-public, .page-app').forEach(p => p.classList.add('hidden'));
+
+  const isPublic = (page === 'landing' || page === 'login');
+  document.getElementById('app').classList.toggle('hidden', isPublic);
+
+  if (page === 'landing') {
+    document.getElementById('page-landing').classList.remove('hidden');
+  } else if (page === 'login') {
+    document.getElementById('page-login').classList.remove('hidden');
+  } else {
+    document.getElementById('page-' + page).classList.remove('hidden');
+    setActiveNav(page);
+    updateBreadcrumb(page, param);
+  }
+
+  // Page-specific rendering
+  if (page === 'dashboard')    renderDashboard();
+  if (page === 'webshop')      renderWebshop();
+  if (page === 'category')     { state.currentCategory = param || state.currentCategory; renderCategory(); }
+  if (page === 'article')      { state.currentArticle = param || state.currentArticle; renderArticle(); }
+  if (page === 'cart')         renderCart();
+  if (page === 'orders')       renderOrders();
+
+  state.currentPage = page;
+  window.scrollTo(0, 0);
+}
+
+function setActiveNav(page) {
+  ['dashboard','webshop','orders'].forEach(p => {
+    const el = document.getElementById('nav-' + p);
+    if (el) el.classList.remove('active');
+  });
+  let navKey = page;
+  if (page === 'category' || page === 'article' || page === 'cart' || page === 'confirmation') navKey = 'webshop';
+  const active = document.getElementById('nav-' + navKey);
+  if (active) active.classList.add('active');
+}
+
+function updateBreadcrumb(page, param) {
+  const bc = document.getElementById('breadcrumb');
+  let html = '';
+  if (page === 'webshop') {
+    html = '<a onclick="navigate(\'dashboard\')">Home</a><span>›</span>Webshop';
+  } else if (page === 'category') {
+    const cat = CONFIG.categories.find(c => c.id === (param || state.currentCategory));
+    html = '<a onclick="navigate(\'dashboard\')">Home</a><span>›</span><a onclick="navigate(\'webshop\')">Webshop</a><span>›</span>' + (cat ? cat.name : '');
+  } else if (page === 'article') {
+    const prod = CONFIG.products.find(p => p.id === (param || state.currentArticle));
+    const cat = prod ? CONFIG.categories.find(c => c.id === prod.cat) : null;
+    html = '<a onclick="navigate(\'dashboard\')">Home</a><span>›</span><a onclick="navigate(\'webshop\')">Webshop</a><span>›</span><a onclick="navigate(\'category\', \'' + (cat ? cat.id : '') + '\')">' + (cat ? cat.name : '') + '</a><span>›</span>' + (prod ? prod.name : '');
+  } else if (page === 'cart') {
+    html = '<a onclick="navigate(\'dashboard\')">Home</a><span>›</span><a onclick="navigate(\'webshop\')">Webshop</a><span>›</span>Winkelwagen';
+  } else if (page === 'orders') {
+    html = '<a onclick="navigate(\'dashboard\')">Home</a><span>›</span>Bestellingen';
+  } else if (page === 'confirmation') {
+    html = '<a onclick="navigate(\'dashboard\')">Home</a><span>›</span>Bevestiging';
+  }
+  if (html) {
+    bc.innerHTML = html;
+    bc.classList.remove('hidden');
+  } else {
+    bc.classList.add('hidden');
+  }
+}
+
+/* ================================================================
+   LOGIN / LOGOUT
+   ================================================================ */
+function login() {
+  // Demo: elke invoer werkt
+  // Vul user info
+  document.getElementById('user-name').textContent = CONFIG.customer.name;
+  document.getElementById('user-account').textContent = CONFIG.customer.accountId + ' — ' + CONFIG.customer.company;
+  document.getElementById('dashboard-firstname').textContent = CONFIG.customer.firstName;
+
+  // AM info
+  document.getElementById('am-initials').textContent = CONFIG.customer.am.initials;
+  document.getElementById('am-name').textContent = CONFIG.customer.am.name;
+  document.getElementById('am-phone').textContent = CONFIG.customer.am.phone;
+  document.getElementById('am-email').textContent = CONFIG.customer.am.email;
+
+  // Contact info
+  document.getElementById('contact-company').textContent = CONFIG.company.shortName;
+  document.getElementById('contact-address').textContent = CONFIG.company.address;
+  document.getElementById('contact-phone').textContent = CONFIG.company.phone;
+  document.getElementById('contact-email').textContent = CONFIG.company.email;
+
+  navigate('dashboard');
+}
+
+function logout() {
+  if (confirm('Uitloggen?')) {
+    state.cart = [];
+    updateCartBadge();
+    navigate('landing');
+  }
+}
+
+/* ================================================================
+   DASHBOARD
+   ================================================================ */
+function renderDashboard() {
+  // KPI's
+  const kpis = [
+    { label: "Openstaande orders", value: "4",        type: "" },
+    { label: "Orders YTD",         value: "47",       type: "" },
+    { label: "Omzet YTD",          value: "€ 23.450", type: "info" },
+    { label: "Kredietruimte",      value: "€ 51.550", type: "" }
+  ];
+  document.getElementById('kpi-row').innerHTML = kpis.map(k => `
+    <div class="kpi-card ${k.type}">
+      <div class="label">${k.label}</div>
+      <div class="value">${k.value}</div>
+    </div>
+  `).join('');
+
+  // Lopende bestellingen
+  document.getElementById('dashboard-open-orders').innerHTML =
+    CONFIG.openOrders.map((o, i) => `
+      <div class="list-item">
+        <div class="num">${i + 1}.</div>
+        <div class="body"><strong>${o.num}</strong><small>${o.detail}</small></div>
+        <div class="dot dot-${o.dot}"></div>
+      </div>
+    `).join('');
+
+  // Meldingen
+  document.getElementById('dashboard-notifications').innerHTML =
+    CONFIG.notifications.map((n, i) => `
+      <div class="list-item">
+        <div class="num">${i + 1}.</div>
+        <div class="body"><strong>${n.title}</strong><small>${n.sub}</small></div>
+        <div class="dot dot-${n.dot}"></div>
+      </div>
+    `).join('');
+
+  // Inzichten
+  document.getElementById('dashboard-insights').innerHTML =
+    CONFIG.insights.map(ins => `
+      <div class="insight-row">
+        <div class="insight-icon">${ins.icon}</div>
+        <div class="text"><strong>${ins.title}</strong><small>${ins.sub}</small></div>
+      </div>
+    `).join('');
+}
+
+/* ================================================================
+   WEBSHOP
+   ================================================================ */
+function renderWebshop() {
+  document.getElementById('category-grid').innerHTML = CONFIG.categories.map(c => `
+    <div class="category-tile" onclick="navigate('category', '${c.id}')">
+      <div class="cat-icon">${c.icon}</div>
+      <div class="cat-name">${c.name}</div>
+      <div class="cat-desc">${c.desc}</div>
+    </div>
+  `).join('');
+
+  // Sidebar lopende orders (compact)
+  document.getElementById('sidebar-open-orders').innerHTML =
+    CONFIG.openOrders.slice(0, 3).map((o, i) => `
+      <div style="padding:6px 0;border-bottom:1px solid var(--color-border);font-size:12px;">
+        <strong style="font-weight:600;">${i + 1}. ${o.num}</strong><br>
+        <span class="text-muted">${o.detail}</span>
+      </div>
+    `).join('');
+}
+
+/* ================================================================
+   CATEGORY
+   ================================================================ */
+function renderCategory() {
+  const cat = CONFIG.categories.find(c => c.id === state.currentCategory);
+  if (!cat) return;
+
+  document.getElementById('category-title').textContent = cat.name;
+  document.getElementById('category-desc').textContent = cat.desc;
+
+  // Sidebar categorieën
+  document.getElementById('category-list-sidebar').innerHTML = CONFIG.categories.map(c => `
+    <a class="cat-link ${c.id === state.currentCategory ? 'active' : ''}" onclick="navigate('category', '${c.id}')">${c.name}</a>
+  `).join('');
+
+  renderCategoryProducts();
+}
+
+function renderCategoryProducts() {
+  const search = (document.getElementById('category-search')?.value || '').toLowerCase();
+  const products = CONFIG.products
+    .filter(p => p.cat === state.currentCategory)
+    .filter(p => !search || p.name.toLowerCase().includes(search) || p.id.includes(search));
+
+  const tbody = document.getElementById('category-products');
+  if (!products.length) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:30px;color:var(--color-text-muted);">Geen artikelen gevonden.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = products.map(p => `
+    <tr>
+      <td>
+        <strong>${p.name}</strong>
+        ${p.len ? `<br><small class="text-muted">Lengte: ${p.len}</small>` : ''}
+      </td>
+      <td><span class="text-muted">${p.id}</span></td>
+      <td>${p.unit}</td>
+      <td style="text-align:right;">
+        <button class="btn btn-primary btn-sm" onclick="navigate('article', '${p.id}')">Bestellen →</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+/* ================================================================
+   ARTICLE / ORDER FORM
+   ================================================================ */
+function renderArticle() {
+  const p = CONFIG.products.find(p => p.id === state.currentArticle);
+  if (!p) return;
+
+  document.getElementById('article-id').textContent = 'Artikelnummer ' + p.id;
+  document.getElementById('article-name').textContent = p.name;
+  document.getElementById('article-meta').textContent = (p.len ? 'Lengte: ' + p.len + ' · ' : '') + 'Eenheid: ' + p.unit;
+  document.getElementById('article-min').textContent = p.min + ' ' + p.unit;
+  document.getElementById('article-step').textContent = p.step + ' ' + p.unit;
+  document.getElementById('article-account').textContent = CONFIG.customer.company + ' (' + CONFIG.customer.accountId + ')';
+  document.getElementById('article-unit-label').textContent = p.unit;
+  document.getElementById('article-unit-price').textContent = p.unit;
+  document.getElementById('order-qty').value = p.min;
+
+  state.currentPrice = null;
+  fetchPrice();
+}
+
+function fetchPrice(manual) {
+  const p = CONFIG.products.find(p => p.id === state.currentArticle);
+  if (!p) return;
+  const priceEl = document.getElementById('article-price');
+  priceEl.innerHTML = '<span class="loading">⟳ Prijs ophalen uit F&O...</span>';
+
+  // Simuleer API call delay
+  setTimeout(() => {
+    const qty = parseInt(document.getElementById('order-qty').value) || 1;
+    const unitPrice = (p.priceMin + Math.random() * (p.priceMax - p.priceMin));
+    state.currentPrice = unitPrice;
+    const total = unitPrice * qty;
+    priceEl.innerHTML = `
+      <span style="color:var(--color-primary);">${fmtEur(unitPrice)}</span>
+      <span style="font-size:13px;font-weight:400;color:var(--color-text-muted);margin-left:10px;">
+        Totaal voor ${qty} × ${p.unit}: <strong>${fmtEur(total)}</strong>
+      </span>
+    `;
+  }, manual ? 600 : 400);
+}
+
+/* ================================================================
+   CART
+   ================================================================ */
+function addToCart() {
+  const p = CONFIG.products.find(p => p.id === state.currentArticle);
+  if (!p) return;
+  const qty = parseInt(document.getElementById('order-qty').value) || 1;
+  const delivery = document.getElementById('order-delivery').value;
+  const term = document.getElementById('order-term').value;
+  const note = document.getElementById('order-note').value;
+
+  state.cart.push({
+    productId: p.id,
+    name: p.name,
+    unit: p.unit,
+    qty: qty,
+    delivery: delivery,
+    term: term,
+    note: note,
+    unitPrice: state.currentPrice || (p.priceMin + p.priceMax) / 2
+  });
+
+  updateCartBadge();
+  // Korte bevestiging
+  const original = event.target.innerText;
+  event.target.innerText = '✓ Toegevoegd';
+  event.target.disabled = true;
+  setTimeout(() => {
+    event.target.innerText = original;
+    event.target.disabled = false;
+    navigate('cart');
+  }, 600);
+}
+
+function removeFromCart(idx) {
+  state.cart.splice(idx, 1);
+  updateCartBadge();
+  renderCart();
+}
+
+function renderCart() {
+  const wrap = document.getElementById('cart-items');
+  const bottom = document.getElementById('cart-bottom');
+  const empty = document.getElementById('cart-empty');
+
+  if (!state.cart.length) {
+    wrap.innerHTML = '';
+    bottom.classList.add('hidden');
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+  bottom.classList.remove('hidden');
+
+  wrap.innerHTML = '<h2>Aankopen (Bezorgen)</h2>' + state.cart.map((item, idx) => `
+    <div class="cart-item">
+      <div class="item-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>${item.name} <span class="text-muted" style="font-weight:400;">(${item.productId})</span></span>
+        <button class="remove-btn" onclick="removeFromCart(${idx})" title="Verwijderen">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+        </button>
+      </div>
+      <div class="item-details">
+        <div>
+          <div class="label">Hoeveelheid</div>
+          <div class="value">${item.qty} ${item.unit}</div>
+        </div>
+        <div>
+          <div class="label">Levermethode</div>
+          <div class="value">${item.delivery}</div>
+        </div>
+        <div>
+          <div class="label">Afleverdatum</div>
+          <div class="value">${item.term}</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="label">Subtotaal</div>
+          <div class="value" style="color:var(--color-primary);font-weight:600;">${fmtEur(item.qty * item.unitPrice)}</div>
+        </div>
+      </div>
+      ${item.note ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--color-border);font-size:13px;"><strong>Opmerking:</strong> <span class="text-muted">${item.note}</span></div>` : ''}
+    </div>
+  `).join('');
+
+  // Summary
+  const subtotal = state.cart.reduce((s, i) => s + i.qty * i.unitPrice, 0);
+  const vat = subtotal * 0.21;
+  document.getElementById('summary-lines').textContent = state.cart.length;
+  document.getElementById('summary-subtotal').textContent = fmtEur(subtotal);
+  document.getElementById('summary-vat').textContent = fmtEur(vat);
+  document.getElementById('summary-total').textContent = fmtEur(subtotal + vat);
+}
+
+function updateCartBadge() {
+  const badge = document.getElementById('cart-badge');
+  if (state.cart.length > 0) {
+    badge.textContent = state.cart.length;
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+}
+
+function placeOrder() {
+  if (!state.cart.length) return;
+  state.orderCounter++;
+  const orderNum = 'SO-2026-0' + state.orderCounter;
+
+  // "Schrijf naar F&O" - voeg toe aan order historie (in-memory voor demo)
+  const total = state.cart.reduce((s, i) => s + i.qty * i.unitPrice, 0) * 1.21;
+  CONFIG.orders.unshift({
+    id: orderNum,
+    date: new Date().toLocaleDateString('nl-NL'),
+    lines: state.cart.length,
+    delivery: state.cart[0].term,
+    total: total,
+    status: "Doorgestuurd naar F&O",
+    statusType: "info"
+  });
+
+  document.getElementById('confirm-order-num').textContent = orderNum;
+  state.cart = [];
+  updateCartBadge();
+  navigate('confirmation');
+}
+
+/* ================================================================
+   ORDERS
+   ================================================================ */
+function renderOrders() {
+  document.getElementById('orders-table-body').innerHTML = CONFIG.orders.map(o => `
+    <tr>
+      <td><strong style="color:var(--color-primary);">${o.id}</strong></td>
+      <td>${o.date}</td>
+      <td>${o.lines}</td>
+      <td>${o.delivery}</td>
+      <td>${fmtEur(o.total)}</td>
+      <td><span class="badge badge-${o.statusType}">${o.status}</span></td>
+      <td style="text-align:right;">
+        <button class="btn btn-secondary btn-sm" onclick="alert('Order detail voor ${o.id} (demo)')">Details</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+/* ================================================================
+   HELPERS
+   ================================================================ */
+function fmtEur(n) {
+  return '€ ' + n.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+/* ================================================================
+   INIT
+   ================================================================ */
+navigate('landing');
+</script>
+
+<!--
+  ============================================================
+  KLANT-AANPASSINGSPROMPT (voor hergebruik met Claude)
+  ============================================================
+
+  Plak deze HTML in een nieuwe chat samen met onderstaande prompt
+  om snel een variant te genereren voor een andere klant:
+
+  ---
+  "Gebruik dit HTML-bestand als basis. Pas alleen het CONFIG
+   object (en de SVG-logo letters 'TH' in de header) aan voor
+   de volgende klant:
+
+   - Bedrijf: [NAAM]
+   - Sector / type producten: [BIJV. 'metalen halffabricaten' / 'bouwmaterialen' / 'horeca grossier']
+   - Branding kleuren: pas --color-primary en --color-accent aan
+     in de :root CSS variabelen (zoek naar 'CSS VARIABLES')
+   - Logo letters in <div class='logo-icon'><span>TH</span></div>
+     vervangen door initialen van het nieuwe bedrijf (2 plekken:
+     landing/app header en login pagina)
+   - Categorieën: bedenk 6-8 categorieën passend bij de sector
+   - Producten: bedenk 4-7 realistische artikelen per categorie
+     met prijs-bandbreedte
+   - Klantnaam, account-id en bedrijfsnaam in CONFIG.customer
+   - 4-5 fictieve historische orders in CONFIG.orders
+
+   Verander niets aan de structuur, alleen de waardes in CONFIG
+   en de twee logo-initialen. Lever het hele bestand terug."
+  ---
+
+  ============================================================
+-->
+
+</body>
+</html>
