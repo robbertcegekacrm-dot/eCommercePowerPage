@@ -31,16 +31,16 @@
      CSS VARIABLES - centraal aan te passen voor branding
      ============================================================ */
   :root {
-    --color-primary:        #5C3D2E;   /* Donker hout */
-    --color-primary-hover:  #44291D;
-    --color-accent:         #B8895F;   /* Warme amber */
-    --color-accent-light:   #EFE4D6;   /* Cream */
-    --color-bg:             #F5F3F0;   /* Pagina-achtergrond */
-    --color-surface:        #FFFFFF;   /* Cards */
-    --color-text:           #2B2B2B;
+    --color-primary:        #1A1A1A;   /* TABS donker — voor nav-tekst, buttons, text */
+    --color-primary-hover:  #333333;
+    --color-accent:         #FFD500;   /* TABS geel */
+    --color-accent-light:   #FFF8D6;   /* Lichte geel-tint */
+    --color-bg:             #F5F5F5;
+    --color-surface:        #FFFFFF;
+    --color-text:           #1A1A1A;
     --color-text-muted:     #6B6B6B;
-    --color-border:         #E1DDD8;
-    --color-border-strong:  #C9C3BC;
+    --color-border:         #E4E4E4;
+    --color-border-strong:  #C7C7C7;
     --color-success:        #2E7D32;
     --color-info:           #1565C0;
     --color-warning:        #ED6C02;
@@ -359,8 +359,8 @@
      ============================================================ */
   .landing-hero {
     background:
-      linear-gradient(135deg, rgba(92,61,46,0.88) 0%, rgba(68,41,29,0.78) 100%),
-      radial-gradient(circle at 20% 20%, rgba(184,137,95,0.4) 0%, transparent 50%);
+      linear-gradient(135deg, rgba(26,26,26,0.92) 0%, rgba(26,26,26,0.85) 100%),
+      radial-gradient(circle at 20% 20%, rgba(255,213,0,0.18) 0%, transparent 50%);
     background-color: var(--color-primary);
     color: white;
     padding: 100px 32px 90px;
@@ -375,8 +375,8 @@
     width: 50%;
     background: repeating-linear-gradient(
       180deg,
-      rgba(184,137,95,0.18) 0px,
-      rgba(184,137,95,0.18) 10px,
+      rgba(255,213,0,0.18) 0px,
+      rgba(255,213,0,0.18) 10px,
       transparent 10px,
       transparent 22px
     );
@@ -448,7 +448,7 @@
   .feature-item p { font-size: 13px; color: var(--color-text-muted); margin: 0; }
 
   .landing-footer {
-    background: #2B1F17;
+    background: #1A1A1A;
     color: rgba(255,255,255,0.7);
     padding: 28px 32px;
     text-align: center;
@@ -626,7 +626,7 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, transparent 0%, rgba(184,137,95,0.15) 100%);
+    background: linear-gradient(135deg, transparent 0%, rgba(255,213,0,0.15) 100%);
     pointer-events: none;
   }
   .category-tile:hover {
