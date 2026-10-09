@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>De Heus Customer Portal (Power Pages standard components demo)</title>
+<!--
+  ============================================================
+  POWER PAGES - STANDARD COMPONENT DEMO - DE HEUS (SINGLE FILE)
+  Languages: English (default), Dutch, Czech.
+  ============================================================
+  Purpose: Shows what a De Heus order portal looks like when it is
+  built mostly from default Power Pages building blocks:
+    - Header / footer (web templates)
+    - Sections and columns (design studio)
+    - Lists (Dataverse views with search, filter, sort, paging)
+    - Forms (Dataverse forms, read-only forms and subgrids)
+    - Alerts, breadcrumb and success messages
+  The few custom parts (live price lookup, cart) are marked as
+  custom code. Use the "Show Power Pages components" button in the
+  bottom left to see which parts are standard, configured or custom.
+
+  Styling follows the Bootstrap look of the default Power Pages
+  theme: only the theme colours (:root) are customised.
+  Replace the "DH" monogram with the official logo.
+  ============================================================
+-->
+<style>
+  :root {
+    --primary: #0B2A4A;          /* theme colour: set in the design studio theme */
+    --primary-hover: #143F6B;
+    --accent: #6BA32A;
+    --link: #0F5FA8;
+    --text: #212529;
+    --muted: #6c757d;
+    --border: #dee2e6;
+    --light: #f8f9fa;
+    --stripe: rgba(0,0,0,.035);
+    --success: #198754; --info: #0c63a8; --warning: #b78103; --danger: #dc3545;
+    --radius: 4px;
+    --font: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { font-family: var(--font); font-size: 16px; line-height: 1.5; color: var(--text); background: #fff; min-height: 100vh; display: flex; flex-direction: column; }
+  main { flex: 1; }
+  a { color: var(--link); text-decoration: none; cursor: pointer; }
+  a:hover { text-decoration: underline; }
+  h1, h2, h3, h4, h5 { margin: 0 0 .6rem; font-weight: 600; line-height: 1.2; color: var(--text); }
+  h1 { font-size: 2rem; } h2 { font-size: 1.5rem; } h3 { font-size: 1.25rem; } h4 { font-size: 1.1rem; } h5 { font-size: 1rem; }
+  p { margin: 0 0 1rem; }
+  .hidden { display: none !important; }
+  .text-muted { color: var(--muted); }
+  .text-end { text-align: right; }
+  .small { font-size: .875rem; }
+  .mt-1 { margin-top: .5rem; } .mt-2 { margin-top: 1rem; } .mt-3 { margin-top: 1.5rem; } .mb-0 { margin-bottom: 0; } .mb-2 { margin-bottom: 1rem; } .mb-3 { margin-bottom: 1.5rem; }
+  :focus-visible { outline: 3px solid rgba(15,95,168,.45); outline-offset: 2px; }
+  .container { width: 100%; max-width: 1140px; margin: 0 auto; padding: 0 16px; }
+
+  /* Navbar (default header) */
+  .navbar { background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 40; }
+  .navbar-inner { display: flex; align-items: center; gap: 8px; min-height: 64px; flex-wrap: wrap; }
+  .navbar-brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.15rem; color: var(--primary); margin-right: 16px; cursor: pointer; }
+  .navbar-brand:hover { text-decoration: none; }
+  .logo-mark { width: 34px; height: 34px; border-radius: 6px; background: var(--primary); color: #fff; font-size: .8rem; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; border-bottom: 5px solid var(--accent); }
+  .navbar-nav { display: flex; gap: 2px; flex: 1; }
+  .nav-link { padding: 8px 12px; color: var(--text); border-bottom: 3px solid transparent; font-size: .975rem; cursor: pointer; }
+  .nav-link:hover { color: var(--primary); text-decoration: none; background: var(--light); }
+  .nav-link.active { border-bottom-color: var(--primary); color: var(--primary); font-weight: 600; }
+  .navbar-right { display: flex; align-items: center; gap: 10px; }
+  .navbar-toggler { display: none; background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 12px; font-size: 1.1rem; cursor: pointer; margin-left: auto; }
+  .nav-badge { background: var(--primary); color: #fff; border-radius: 10px; font-size: .75rem; padding: 1px 7px; margin-left: 4px; }
+  .dropdown { position: relative; }
+  .dropdown-menu { position: absolute; right: 0; top: calc(100% + 6px); min-width: 180px; background: #fff; border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 6px 16px rgba(0,0,0,.12); padding: 6px 0; display: none; z-index: 60; }
+  .dropdown.open .dropdown-menu { display: block; }
+  .dropdown-item { display: block; padding: 8px 16px; color: var(--text); cursor: pointer; font-size: .95rem; }
+  .dropdown-item:hover { background: var(--light); text-decoration: none; }
+
+  /* Buttons, forms */
+  .btn { display: inline-block; font-family: inherit; font-size: 1rem; font-weight: 400; line-height: 1.5; padding: 6px 16px; border: 1px solid transparent; border-radius: var(--radius); cursor: pointer; text-align: center; background: transparent; color: var(--text); }
+  .btn:hover { text-decoration: none; }
+  .btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
+  .btn-outline { border-color: var(--primary); color: var(--primary); background: #fff; }
+  .btn-outline:hover { background: var(--primary); color: #fff; }
+  .btn-secondary { background: #fff; border-color: var(--border); color: var(--text); }
+  .btn-secondary:hover { background: var(--light); }
+  .btn-light { background: #fff; color: var(--primary); border-color: #fff; }
+  .btn-light:hover { background: var(--light); }
+  .btn-sm { padding: 3px 10px; font-size: .875rem; }
+  .btn-lg { padding: 10px 24px; font-size: 1.1rem; }
+  .btn:disabled { opacity: .65; cursor: default; }
+  .form-label { display: block; margin-bottom: 4px; font-weight: 600; font-size: .95rem; }
+  .required::after { content: " *"; color: var(--danger); }
+  .form-control, .form-select { display: block; width: 100%; padding: 6px 12px; font-family: inherit; font-size: 1rem; line-height: 1.5; color: var(--text); background: #fff; border: 1px solid #ced4da; border-radius: var(--radius); }
+  .form-control:focus, .form-select:focus { outline: none; border-color: #86a8cc; box-shadow: 0 0 0 .2rem rgba(15,95,168,.2); }
+  .form-control[readonly] { background: #e9ecef; }
+  .form-select-sm { padding: 3px 8px; font-size: .875rem; width: auto; }
+  .form-text { font-size: .85rem; color: var(--muted); margin-top: 3px; }
+  .form-group { margin-bottom: 1rem; }
+  fieldset { border: 0; padding: 0; margin: 0 0 1.5rem; }
+  legend { font-size: 1.15rem; font-weight: 600; width: 100%; padding-bottom: 6px; margin-bottom: 14px; border-bottom: 1px solid var(--border); color: var(--primary); }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
+  .row3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .input-group { display: flex; }
+  .input-group .form-control { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+  .input-group .btn { border-top-left-radius: 0; border-bottom-left-radius: 0; }
+  .qty { display: flex; align-items: center; gap: 10px; }
+  .qty .form-control { max-width: 120px; }
+
+  /* Cards, alerts, badges, breadcrumb */
+  .card { border: 1px solid var(--border); border-radius: 6px; background: #fff; display: flex; flex-direction: column; }
+  .card-body { padding: 20px; flex: 1; }
+  .card-title { font-size: 1.15rem; font-weight: 600; margin-bottom: 8px; }
+  .card-footer { padding: 12px 20px; border-top: 1px solid var(--border); background: var(--light); border-radius: 0 0 6px 6px; }
+  .alert { padding: 12px 16px; border: 1px solid; border-radius: var(--radius); margin-bottom: 1rem; }
+  .alert-warning { background: #fff3cd; border-color: #ffe69c; color: #664d03; }
+  .alert-success { background: #d1e7dd; border-color: #badbcc; color: #0a3622; }
+  .alert-info { background: #cfe2ff; border-color: #b6d4fe; color: #052c65; }
+  .badge { display: inline-block; padding: 3px 9px; border-radius: 4px; font-size: .78rem; font-weight: 600; color: #fff; }
+  .bg-success { background: var(--success); } .bg-info { background: var(--info); } .bg-warning { background: #e0a800; color: #212529; } .bg-muted { background: var(--muted); }
+  .breadcrumb { display: flex; flex-wrap: wrap; padding: 14px 0 6px; margin: 0; list-style: none; font-size: .9rem; color: var(--muted); }
+  .breadcrumb li + li::before { content: "/"; padding: 0 8px; color: var(--muted); }
+
+  /* Lists (Dataverse views) */
+  .list-toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 14px; }
+  .list-toolbar .grow { flex: 1; min-width: 220px; }
+  .list-toolbar .fld { min-width: 180px; }
+  .table-wrap { overflow-x: auto; }
+  table.table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+  table.table th, table.table td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; font-size: .95rem; }
+  table.table thead th { border-bottom: 2px solid #adb5bd; background: #fff; font-weight: 600; white-space: nowrap; }
+  table.table th.sortable { cursor: pointer; }
+  table.table th.sortable:hover { background: var(--light); }
+  table.table tbody tr:nth-child(odd) td { background: var(--stripe); }
+  table.table tbody tr:hover td { background: rgba(15,95,168,.07); }
+  .sort-ind { color: var(--muted); font-size: .7rem; margin-left: 4px; }
+  .list-footer { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .pagination { display: flex; list-style: none; margin: 0; padding: 0; }
+  .page-link { display: block; padding: 6px 12px; border: 1px solid var(--border); margin-left: -1px; color: var(--link); background: #fff; cursor: pointer; font-size: .95rem; }
+  .page-item:first-child .page-link { border-radius: var(--radius) 0 0 var(--radius); margin-left: 0; }
+  .page-item:last-child .page-link { border-radius: 0 var(--radius) var(--radius) 0; }
+  .page-item.active .page-link { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .page-item.disabled .page-link { color: var(--muted); pointer-events: none; background: var(--light); }
+  .page-link:hover { background: var(--light); text-decoration: none; }
+  .page-item.active .page-link:hover { background: var(--primary); }
+  .empty { text-align: center; color: var(--muted); padding: 24px 0 !important; }
+
+  /* Hero (design studio section with background) */
+  .hero { background: linear-gradient(120deg, var(--primary), #1c4d73); color: #fff; padding: 72px 0 80px; }
+  .hero h1 { color: #fff; font-size: 2.6rem; max-width: 760px; }
+  .hero p { font-size: 1.2rem; max-width: 640px; opacity: .9; margin-bottom: 1.5rem; }
+
+  /* Sign-in page */
+  .signin { max-width: 440px; margin: 40px auto; }
+  .signin-check { display: flex; justify-content: space-between; font-size: .9rem; margin-bottom: 1rem; }
+
+  /* Price field (custom code) */
+  .price-field { border: 1px solid var(--border); border-radius: var(--radius); background: var(--light); padding: 12px 16px; }
+  .price-field .price { font-size: 1.6rem; font-weight: 700; color: var(--primary); }
+  .tag { display: inline-block; font-size: .8rem; padding: 1px 8px; border-radius: 10px; background: var(--light); border: 1px solid var(--border); color: var(--muted); margin-right: 4px; }
+
+  /* Footer (default) */
+  .footer { background: var(--light); border-top: 1px solid var(--border); padding: 22px 0; font-size: .9rem; color: var(--muted); margin-top: 48px; }
+  .footer .container { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+
+  /* Demo tools: component overlay + log */
+  .tools { position: fixed; left: 16px; bottom: 16px; z-index: 90; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+  .tool-btn { background: #212529; color: #fff; border: none; border-radius: 20px; padding: 8px 14px; font: 600 13px var(--font); cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+  .tool-btn.on { background: var(--accent); }
+  .legend { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 12px; box-shadow: 0 4px 14px rgba(0,0,0,.18); display: none; }
+  body.show-pp .legend { display: block; }
+  .legend div { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
+  .legend i { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
+  .trace-panel { position: fixed; left: 16px; bottom: 112px; z-index: 90; width: 400px; max-width: calc(100vw - 32px); max-height: 300px; overflow: auto; background: #0A1E33; color: #D5E3EF; border-radius: 8px; padding: 12px 14px; font: 12px Consolas, 'Courier New', monospace; box-shadow: 0 8px 24px rgba(0,0,0,.3); }
+  .trace-panel .t-title { font: 700 13px var(--font); color: #fff; margin-bottom: 6px; }
+  .trace-panel .t-line { padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,.08); }
+  .trace-panel .t-line b { color: #9AD25A; }
+  .trace-panel .t-empty { color: #8FA6BA; }
+
+  [data-pp-type="oob"]  { --pp-c: #107C10; }
+  [data-pp-type="low"]  { --pp-c: #C25A0E; }
+  [data-pp-type="code"] { --pp-c: #7A5CB8; }
+  body.show-pp [data-pp-label] { position: relative; outline: 2px dashed var(--pp-c); outline-offset: 5px; margin-top: 30px; }
+  body.show-pp [data-pp-label]::before { content: attr(data-pp-label); position: absolute; top: -27px; left: -2px; background: var(--pp-c); color: #fff; font: 600 11px/1 var(--font); padding: 5px 9px; border-radius: 3px 3px 0 0; white-space: nowrap; z-index: 30; }
+  body.show-pp header.navbar[data-pp-label] { margin-top: 0; outline-offset: -2px; }
+  body.show-pp header.navbar[data-pp-label]::before { top: auto; bottom: -1px; left: 8px; border-radius: 3px 3px 0 0; transform: translateY(100%); border-radius: 0 0 3px 3px; }
+  body.show-pp .hero[data-pp-label] { margin-top: 0; outline-offset: -4px; }
+  body.show-pp .hero[data-pp-label]::before { top: 4px; left: 4px; border-radius: 3px; }
+  body.show-pp .footer[data-pp-label] { margin-top: 48px; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  @media (max-width: 900px) {
+    .navbar-toggler { display: block; }
+    .navbar-nav { display: none; width: 100%; flex-direction: column; order: 5; }
+    .navbar-nav.open { display: flex; }
+    .navbar-right { margin-left: auto; }
+    .row2, .row3 { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 2rem; }
+    .navbar-brand span:last-child { max-width: 150px; font-size: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<header class="navbar" data-pp-label="Header · Web template (Liquid)" data-pp-type="low">
+  <div class="container navbar-inner">
+    <a class="navbar-brand" onclick="navigate('home')"><span class="logo-mark">DH</span><span id="site-name"></span></a>
+    <button class="navbar-toggler" onclick="document.getElementById('navbar-nav').classList.toggle('open')" data-i18n-title="pp_toggle_nav">☰</button>
+    <nav class="navbar-nav" id="navbar-nav">
+      <a class="nav-link" id="nav-home" onclick="navigate('home')" data-i18n="pp_home"></a>
+      <a class="nav-link" id="nav-shop" onclick="go('shop')" data-i18n="nav_shop"></a>
+      <a class="nav-link" id="nav-orders" onclick="go('orders')" data-i18n="nav_orders"></a>
+      <a class="nav-link" onclick="alert(t('alert_contact'))" data-i18n="nav_contact"></a>
+    </nav>
+    <div class="navbar-right">
+      <select class="form-select form-select-sm" id="lang-select" onchange="setLang(this.value)" data-i18n-title="lang_label"></select>
+      <a class="nav-link hidden" id="nav-cart" onclick="go('cart')"><span data-i18n="pp_cart"></span><span class="nav-badge" id="cart-badge">0</span></a>
+      <div id="auth-anon"><button class="btn btn-primary btn-sm" onclick="navigate('login')" data-i18n="pp_signin"></button></div>
+      <div id="auth-user" class="dropdown hidden">
+        <a class="nav-link" onclick="document.getElementById('auth-user').classList.toggle('open');event.stopPropagation();"><span id="user-name"></span> ▾</a>
+        <div class="dropdown-menu">
+          <a class="dropdown-item" onclick="alert(t('pp_alert_profile'))" data-i18n="pp_profile"></a>
+          <a class="dropdown-item" onclick="signOut()" data-i18n="pp_signout"></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="container"><ul class="breadcrumb hidden" id="breadcrumb" data-pp-label="Breadcrumb · Web template" data-pp-type="oob"></ul></div>
+
+  <!-- HOME -->
+  <div id="page-home" class="pp-page">
+    <section class="hero" data-pp-label="Section · Hero banner (design studio)" data-pp-type="oob">
+      <div class="container">
+        <h1 data-i18n="pp_home_title"></h1>
+        <p data-i18n="pp_home_sub"></p>
+        <button class="btn btn-light btn-lg" id="hero-btn"></button>
+      </div>
+    </section>
+
+    <div class="container mt-3" id="home-anon">
+      <div class="row3" data-pp-label="Section · 3 columns with text" data-pp-type="oob">
+        <div class="card"><div class="card-body"><h3 class="card-title" data-i18n="f1_t"></h3><p class="mb-0" data-i18n="f1_p"></p></div></div>
+        <div class="card"><div class="card-body"><h3 class="card-title" data-i18n="f2_t"></h3><p class="mb-0" data-i18n="f2_p"></p></div></div>
+        <div class="card"><div class="card-body"><h3 class="card-title" data-i18n="f3_t"></h3><p class="mb-0" data-i18n="f3_p"></p></div></div>
+      </div>
+    </div>
+
+    <div class="container mt-3 hidden" id="home-auth">
+      <h2 id="home-greeting"></h2>
+      <div class="alert alert-warning" id="home-alert" data-pp-label="Content snippet · Liquid (silo alert)" data-pp-type="low"></div>
+
+      <div class="row3 mt-2" data-pp-label="Section · 3 columns with buttons" data-pp-type="oob">
+        <div class="card"><div class="card-body"><h3 class="card-title" data-i18n="nav_shop"></h3><p data-i18n="pp_c1_p"></p></div><div class="card-footer"><button class="btn btn-primary btn-sm" onclick="navigate('shop')" data-i18n="pp_open"></button></div></div>
+        <div class="card"><div class="card-body"><h3 class="card-title" data-i18n="nav_orders"></h3><p data-i18n="pp_c2_p"></p></div><div class="card-footer"><button class="btn btn-primary btn-sm" onclick="navigate('orders')" data-i18n="pp_open"></button></div></div>
+        <div class="card"><div class="card-body"><h3 class="card-title" data-i18n="c_advisor"></h3><p class="mb-2"><strong id="adv-name"></strong><br><span class="text-muted" id="adv-role"></span></p><p class="mb-0 small" id="adv-contact"></p></div></div>
+      </div>
+
+      <h3 class="mt-3" data-i18n="c_open"></h3>
+      <div data-pp-label="List · Dataverse view (open orders)" data-pp-type="oob">
+        <div class="table-wrap">
+          <table class="table"><thead><tr><th data-i18n="th_order"></th><th data-i18n="th_date"></th><th data-i18n="th_delivery"></th><th data-i18n="th_status"></th></tr></thead><tbody id="home-orders"></tbody></table>
+        </div>
+      </div>
+      <a onclick="navigate('orders')" data-i18n="lnk_all_orders"></a>
+    </div>
+  </div>
+
+  <!-- SIGN IN -->
+  <div id="page-login" class="pp-page hidden">
+    <div class="container">
+      <div class="signin" data-pp-label="Authentication · Entra External ID / local sign-in" data-pp-type="oob">
+        <h2 data-i18n="pp_signin"></h2>
+        <p class="text-muted" data-i18n="login_sub"></p>
+        <div class="form-group"><label class="form-label" for="login-email" data-i18n="lbl_email"></label><input type="email" class="form-control" id="login-email" value="jan@vanderveen-farm.example"></div>
+        <div class="form-group"><label class="form-label" for="login-pw" data-i18n="lbl_password"></label><input type="password" class="form-control" id="login-pw" value="demo"></div>
+        <div class="signin-check"><label><input type="checkbox"> <span data-i18n="pp_remember"></span></label><a onclick="alert('Demo')" data-i18n="pp_forgot"></a></div>
+        <button class="btn btn-primary" style="width:100%" onclick="signIn()" data-i18n="pp_signin"></button>
+        <div class="alert alert-info mt-2 small" data-i18n-html="demo_note"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ORDER FEED: LIST -->
+  <div id="page-shop" class="pp-page hidden">
+    <div class="container mt-2">
+      <h1 data-i18n="shop_title"></h1>
+      <p class="text-muted" data-i18n="shop_sub"></p>
+      <div data-pp-label="List · Dataverse view with search, filter, sort and paging" data-pp-type="oob">
+        <div class="list-toolbar">
+          <div class="grow">
+            <label class="form-label" for="shop-q" data-i18n="pp_search"></label>
+            <div class="input-group"><input type="text" class="form-control" id="shop-q" data-i18n-ph="cat_search_ph" onkeydown="if(event.key==='Enter')shopSearch()"><button class="btn btn-primary" onclick="shopSearch()" data-i18n="pp_search"></button></div>
+          </div>
+          <div class="fld"><label class="form-label" for="shop-group" data-i18n="pp_group"></label><select class="form-select" id="shop-group" onchange="shopFilter()"></select></div>
+          <div class="fld"><label class="form-label" for="shop-view" data-i18n="pp_view"></label><select class="form-select" id="shop-view" onchange="shopView()"></select></div>
+        </div>
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr>
+              <th class="sortable" onclick="shopSort('id')"><span data-i18n="th_article"></span><span class="sort-ind" id="si-id"></span></th>
+              <th class="sortable" onclick="shopSort('name')"><span data-i18n="th_feed"></span><span class="sort-ind" id="si-name"></span></th>
+              <th data-i18n="pp_specification"></th>
+              <th class="sortable" onclick="shopSort('cat')"><span data-i18n="pp_group"></span><span class="sort-ind" id="si-cat"></span></th>
+              <th></th>
+            </tr></thead>
+            <tbody id="shop-rows"></tbody>
+          </table>
+        </div>
+        <div class="list-footer"><span class="small text-muted" id="shop-count"></span><ul class="pagination" id="shop-pages"></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARTICLE: ORDER LINE FORM -->
+  <div id="page-article" class="pp-page hidden">
+    <div class="container mt-2" style="max-width:880px;">
+      <h1 id="article-name"></h1>
+      <p class="text-muted" id="article-meta"></p>
+      <div data-pp-label="Form · Dataverse form (order line)" data-pp-type="oob">
+        <fieldset>
+          <legend data-i18n="sec_info"></legend>
+          <div class="row2">
+            <div class="form-group"><label class="form-label" data-i18n="th_article"></label><input class="form-control" id="f-id" readonly></div>
+            <div class="form-group"><label class="form-label" data-i18n="pp_group"></label><input class="form-control" id="f-group" readonly></div>
+          </div>
+          <div class="form-group"><label class="form-label" data-i18n="lbl_avail"></label><input class="form-control" id="f-forms" readonly></div>
+        </fieldset>
+
+        <fieldset>
+          <legend data-i18n="sec_order"></legend>
+          <div class="row2">
+            <div class="form-group"><label class="form-label required" for="order-form" data-i18n="lbl_form"></label><select class="form-select" id="order-form" onchange="onFormChange()"></select></div>
+            <div class="form-group"><label class="form-label required" for="order-qty" data-i18n="lbl_qty"></label>
+              <div class="qty"><input type="number" class="form-control" id="order-qty" min="1" value="1" oninput="fetchPrice()"><span id="qty-unit"></span></div>
+              <div class="form-text" id="qty-hint"></div></div>
+          </div>
+          <div class="row2">
+            <div class="form-group"><label class="form-label required" for="order-location" data-i18n="lbl_location"></label><select class="form-select" id="order-location" onchange="renderSiloOptions()"></select></div>
+            <div class="form-group" id="silo-group"><label class="form-label required" for="order-silo" data-i18n="lbl_silo"></label><select class="form-select" id="order-silo"></select></div>
+          </div>
+          <div class="row2">
+            <div class="form-group"><label class="form-label required" for="order-term" data-i18n="lbl_week"></label><select class="form-select" id="order-term"></select></div>
+            <div class="form-group"><label class="form-label" for="order-note" data-i18n="lbl_note"></label><input type="text" class="form-control" id="order-note" data-i18n-ph="note_ph"></div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend data-i18n="pp_sec_price"></legend>
+          <div class="price-field" data-pp-label="Custom code · JavaScript calling server-side logic (live F&O price)" data-pp-type="code">
+            <div class="small text-muted"><span id="price-label"></span> <span data-i18n="price_live"></span></div>
+            <div class="price" id="article-price"></div>
+            <div class="small text-muted" id="article-price-sub"></div>
+          </div>
+        </fieldset>
+
+        <div>
+          <button class="btn btn-primary" id="btn-add" onclick="addToCart(this)" data-i18n="btn_add"></button>
+          <button class="btn btn-secondary" onclick="navigate('shop')" data-i18n="pp_cancel"></button>
+        </div>
+        <p class="form-text mt-1" data-i18n="pp_required"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CART -->
+  <div id="page-cart" class="pp-page hidden">
+    <div class="container mt-2">
+      <h1 data-i18n="cart_title"></h1>
+      <p class="text-muted" data-i18n="cart_sub"></p>
+      <div data-pp-label="Custom component · React / JavaScript (built with coding agent)" data-pp-type="code">
+        <div id="cart-full" class="hidden">
+          <div class="table-wrap">
+            <table class="table">
+              <thead><tr><th data-i18n="th_feed"></th><th data-i18n="lbl_qty"></th><th data-i18n="lbl_location"></th><th data-i18n="lbl_week"></th><th class="text-end" data-i18n="lbl_subtotal"></th><th></th></tr></thead>
+              <tbody id="cart-rows"></tbody>
+            </table>
+          </div>
+          <table class="table" style="max-width:420px;margin-left:auto;">
+            <tbody>
+              <tr><td data-i18n="sum_lines"></td><td class="text-end" id="summary-lines"></td></tr>
+              <tr><td data-i18n="sum_weight"></td><td class="text-end" id="summary-weight"></td></tr>
+              <tr><td data-i18n="sum_sub"></td><td class="text-end" id="summary-subtotal"></td></tr>
+              <tr><td id="summary-vat-label"></td><td class="text-end" id="summary-vat"></td></tr>
+              <tr><td><strong data-i18n="sum_total"></strong></td><td class="text-end"><strong id="summary-total"></strong></td></tr>
+            </tbody>
+          </table>
+          <div class="text-end">
+            <button class="btn btn-secondary" onclick="navigate('shop')" data-i18n="btn_continue"></button>
+            <button class="btn btn-primary" onclick="placeOrder()" data-i18n="btn_place"></button>
+          </div>
+          <p class="form-text text-end mt-1" data-i18n="cart_foot"></p>
+        </div>
+        <div id="cart-empty" class="hidden">
+          <div class="alert alert-info" data-i18n="cart_empty"></div>
+          <button class="btn btn-primary" onclick="navigate('shop')" data-i18n="btn_to_shop"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div id="page-done" class="pp-page hidden">
+    <div class="container mt-2" style="max-width:760px;">
+      <div class="alert alert-success" data-pp-label="Form · success message" data-pp-type="oob">
+        <h3 data-i18n="pp_success_title"></h3>
+        <p class="mb-0" id="done-text"></p>
+      </div>
+      <button class="btn btn-primary" onclick="navigate('orders')" data-i18n="btn_to_orders"></button>
+      <button class="btn btn-secondary" onclick="navigate('home')" data-i18n="pp_home"></button>
+    </div>
+  </div>
+
+  <!-- ORDERS LIST -->
+  <div id="page-orders" class="pp-page hidden">
+    <div class="container mt-2">
+      <h1 data-i18n="orders_title"></h1>
+      <p class="text-muted" data-i18n="orders_sub"></p>
+      <div data-pp-label="List · Dataverse view (sales orders, virtual table)" data-pp-type="oob">
+        <div class="list-toolbar">
+          <div class="fld"><label class="form-label" for="orders-view" data-i18n="pp_view"></label><select class="form-select" id="orders-view" onchange="ordersView()"></select></div>
+        </div>
+        <div class="table-wrap">
+          <table class="table"><thead><tr><th data-i18n="th_order"></th><th data-i18n="th_date"></th><th data-i18n="th_lines"></th><th data-i18n="th_weight"></th><th data-i18n="th_delivery"></th><th class="text-end" data-i18n="th_total"></th><th data-i18n="th_status"></th></tr></thead><tbody id="orders-rows"></tbody></table>
+        </div>
+        <div class="list-footer"><span class="small text-muted" id="orders-count"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ORDER DETAILS -->
+  <div id="page-order" class="pp-page hidden">
+    <div class="container mt-2" style="max-width:880px;">
+      <h1 id="order-title"></h1>
+      <div data-pp-label="Form · Dataverse form (read-only)" data-pp-type="oob">
+        <fieldset>
+          <div class="row2">
+            <div class="form-group"><label class="form-label" data-i18n="th_order"></label><input class="form-control" id="o-id" readonly></div>
+            <div class="form-group"><label class="form-label" data-i18n="th_date"></label><input class="form-control" id="o-date" readonly></div>
+          </div>
+          <div class="row2">
+            <div class="form-group"><label class="form-label" data-i18n="th_status"></label><input class="form-control" id="o-status" readonly></div>
+            <div class="form-group"><label class="form-label" data-i18n="th_delivery"></label><input class="form-control" id="o-delivery" readonly></div>
+          </div>
+          <div class="row2">
+            <div class="form-group"><label class="form-label" data-i18n="th_weight"></label><input class="form-control" id="o-weight" readonly></div>
+            <div class="form-group"><label class="form-label" data-i18n="pp_total_incl"></label><input class="form-control" id="o-total" readonly></div>
+          </div>
+        </fieldset>
+        <div data-pp-label="Subgrid · order lines" data-pp-type="oob">
+          <legend data-i18n="pp_order_lines"></legend>
+          <div class="table-wrap">
+            <table class="table"><thead><tr><th data-i18n="th_feed"></th><th data-i18n="lbl_qty"></th><th class="text-end" data-i18n="pp_net"></th></tr></thead><tbody id="o-lines"></tbody></table>
+          </div>
+        </div>
+        <button class="btn btn-secondary" onclick="navigate('orders')" data-i18n="pp_back_orders"></button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="footer" data-pp-label="Footer · Web template" data-pp-type="low">
+  <div class="container">
+    <span data-i18n="pp_footer"></span>
+    <span><a onclick="alert('Demo')" data-i18n="pp_privacy"></a> &nbsp;·&nbsp; <a onclick="alert('Demo')" data-i18n="pp_terms"></a></span>
+  </div>
+</footer>
+
+<div class="tools">
+  <div class="legend">
+    <div><i style="background:#107C10"></i><span data-i18n="pp_legend_oob"></span></div>
+    <div><i style="background:#C25A0E"></i><span data-i18n="pp_legend_low"></span></div>
+    <div><i style="background:#7A5CB8"></i><span data-i18n="pp_legend_code"></span></div>
+  </div>
+  <button class="tool-btn" id="pp-toggle" onclick="togglePP()" data-i18n="pp_components"></button>
+  <button class="tool-btn" onclick="toggleTrace()" data-i18n="trace_toggle"></button>
+</div>
+<div class="trace-panel hidden" id="trace-panel">
+  <div class="t-title">Power Pages ⇄ Dataverse ⇄ F&amp;O</div>
+  <div id="trace-lines"></div>
+</div>
+
+<script>
+/* ================================================================
+   TRANSLATIONS (EN / NL / CS)
+   Add a language: add an entry to LANGS, a dictionary in I18N, and one
+   extra text pair per row in P_TXT and CAT_TXT (same column order).
+   Czech and Dutch texts are demo quality: have a native speaker check them.
+   ================================================================ */
+const LANGS = {
+  en: { name: 'English',    locale: 'en-GB', idx: 0 },
+  nl: { name: 'Nederlands', locale: 'nl-NL', idx: 1 },
+  cs: { name: 'Čeština',    locale: 'cs-CZ', idx: 2 }
+};
+
+const I18N = {
+en: {
+  doc_title: "De Heus Feed - Customer Portal (demo)", lang_label: "Language",
+  brand_tag: "Animal nutrition since 1911", brand_portal: "Customer portal",
+  btn_login_portal: "Log in to the customer portal",
+  hero_title: "Order feed when it suits you.",
+  hero_tag: "Check your silos, see your own daily prices and place your order in a few clicks. Directly connected to our stock and route planning.",
+  hero_cta1: "Go to the customer portal", hero_cta2: "What can I do here?",
+  feat_title: "Your farm, your agreements, your prices",
+  feat_sub: "Everything you need to order feed without picking up the phone.",
+  f1_t: "Your own range", f1_p: "You only see the feeds that match your animals and contract agreements.",
+  f2_t: "Current daily prices", f2_p: "Prices are fetched live, including your agreements, volume discounts and the raw material index.",
+  f3_t: "Order and track", f3_p: "Choose bulk, big bag or bagged goods, specify the silo and follow your delivery to the farm gate.",
+  footer: "De Heus Voeders B.V. · Demo environment with fictional data · customerservice@deheus.example",
+  login_brand: "De Heus Customer Portal", login_title: "Log in", login_sub: "Use your email address and password.",
+  lbl_email: "Email address", lbl_password: "Password", login_btn: "Log in",
+  demo_note: "<strong>Demo:</strong> any input works, just click Log in.", back_site: "← Back to the website",
+  nav_home: "My farm", nav_shop: "Order feed", nav_orders: "Orders", nav_advice: "Feed advice", nav_contact: "Contact",
+  tt_logout: "Log out", tt_cart: "Shopping cart", confirm_logout: "Log out?",
+  alert_advice: "Feed advice (not built out in this demo)", alert_contact: "Contact (not built out in this demo)",
+  alert_notifs: "Notifications (demo)", alert_stats: "More figures (demo)", alert_invoices: "Invoices (demo)",
+  alert_terms: "Delivery terms (demo)", alert_details: "Order details {id} (demo)",
+  bc_home: "My farm", bc_shop: "Order feed", bc_cart: "Shopping cart", bc_orders: "Orders", bc_confirm: "Confirmation",
+  greeting: "Welcome back, {name}", dash_sub: "This is how your farm looks today.",
+  next_title: "Next delivery: {date}", next_sub: "12 tons of {product} to Silo 1",
+  kpi_open: "Open orders", kpi_open_sub: "1 on its way this week", kpi_30: "Feed ordered (30 days)", kpi_30_val: "52 tons", kpi_30_sub: "Dairy cattle and young stock",
+  kpi_month: "Ordered this month", kpi_month_sub: "Across 6 orders", kpi_credit: "Available credit", kpi_credit_sub: "of {limit}",
+  silos_title: "Your silos", silos_sub: "Based on your silo sensors and average usage",
+  silo_of: "{tons} of {cap} tons · about {days} days left", reorder: "Reorder",
+  c_open: "Open orders", c_notifs: "Notifications", c_figures: "Your figures",
+  lnk_all_orders: "View all orders →", lnk_all_notifs: "View all notifications →", lnk_more_figs: "View more figures →",
+  c_quick: "Quick start", btn_new_order: "New order", btn_repeat: "Repeat last order", btn_invoices: "View invoices",
+  c_advisor: "Your feed advisor", adv_role: "Dairy feed advisor", c_company: "Your company details",
+  lbl_cust_no: "Customer no.", lbl_ubn: "Farm ID (UBN)",
+  oo1: "12 tons bulk · Silo 1 · Thursday route", oo2: "6 tons bulk · Silo 2 · next week", oo3: "2 pallets · delivered yesterday",
+  n1_t: "Delivery scheduled", n1_s: "Thursday, between 07:00 and 11:00", n2_t: "Silo 2 almost empty", n2_s: "About 8 days of feed left in the silo",
+  n3_t: "New price list", n3_s: "Raw material index updated on Monday", n4_t: "Invoice available", n4_s: "Due in 14 days",
+  i1_t: "Feed consumption", i1_s: "Dairy: 27.4 tons per month", i2_t: "Feed cost per 100 kg milk", i2_s: "€ 9.85 (last month € 10.12)",
+  i3_t: "My invoices", i3_s: "1 open invoice", i4_t: "Sustainability", i4_s: "Feed footprint 12% lower than last year",
+  shop_title: "Order feed", shop_sub: "Choose a species or product group. You only see feeds within your agreements.",
+  sb_favs: "Favourites", sb_open: "Open orders", sb_quick: "Quick links", lnk_my_orders: "My orders", lnk_cart: "Shopping cart", lnk_terms: "Delivery terms",
+  search_ph: "Search by product name or article number, e.g. 'calf feed'", no_favs: "No favourites yet.",
+  n_products: "{n} products", no_results: "No feed found for \"{q}\". Try a species or part of the name.",
+  back_shop: "← Back to order feed", sb_groups: "Product groups", cat_search_ph: "Search in this product group...",
+  th_feed: "Feed", th_article: "Article no.", th_forms: "Delivery form", btn_order: "Order", no_feed: "No feed found. Clear the search to see everything.",
+  back_cat: "← Back to product group", article_no: "Article number {id}", tag_contract: "Based on your contract", tag_daily: "Daily price",
+  sec_info: "Product information", lbl_customer: "Customer", lbl_avail: "Available forms", sec_order: "Your order",
+  lbl_form: "Delivery form", lbl_qty: "Quantity", lbl_location: "Delivery location", lbl_silo: "Silo", lbl_week: "Delivery week",
+  lbl_note: "Note for the driver", note_ph: "For example: close the gate, call on arrival",
+  price_label: "Your price per {unit}", price_live: "(live from F&O)", price_loading: "Fetching price from F&O...",
+  btn_add: "Add to cart", btn_refresh: "Refresh price", fav_on: "★ Favourite", fav_off: "☆ Favourite", added: "✓ Added", less: "Less", more: "More",
+  qty_hint: "{qty} {unitQty} = {tons} t · minimum {min} {unitMin}",
+  total_line: "Total excl. VAT: <strong>{total}</strong> · {perTon} per ton", discount_chip: "volume −{x}%", spark: "Last 8 weeks: {sign}{x}%",
+  term_route: "Next route (2 to 3 working days)", term_route_short: "Next route", term_week: "Week {n}", term_date: "Specific date (contact us)", term_date_short: "Specific date",
+  unit_ton: "ton|tons", unit_bigbag: "big bag|big bags", unit_pallet: "pallet|pallets", unit_bucket: "bucket|buckets",
+  form_bulk_l: "Bulk (silo truck)", form_bigbag_l: "Big bag 1,000 kg", form_pallet_l: "Bagged goods 25 kg (pallet of 40 bags)", form_bucket_l: "Bucket 22.5 kg",
+  form_bulk_s: "Bulk", form_bigbag_s: "Big bag", form_pallet_s: "Pallet", form_bucket_s: "Bucket",
+  loc1: "Main site, Dorpsstraat 14, Barneveld", loc1_s1: "Silo 1, dairy feed (30 tons)", loc1_s2: "Silo 2, calf feed (15 tons)", loc1_s3: "Silo 3, minerals (10 tons)",
+  loc2: "Young stock barn, Kerkweg 3, Terschuur", loc2_s1: "Silo 1, rearing feed (20 tons)",
+  cart_title: "Shopping cart", cart_sub: "Check your order lines. When you confirm, the sales order is created in Dynamics 365 F&O.",
+  lbl_subtotal: "Subtotal", remove: "Remove line", note_inline: "Note:",
+  sum_lines: "Number of lines", sum_weight: "Total weight", sum_sub: "Subtotal (excl. VAT)", sum_vat: "VAT ({p}%)", sum_total: "Total",
+  btn_continue: "← Continue ordering", btn_place: "Place order", cart_foot: "After you confirm, a process writes the lines to Dynamics 365 F&O as a sales order.",
+  cart_empty: "Your cart is still empty.", btn_to_shop: "Order feed",
+  conf_title: "Thank you for your order", conf_p: "Your order is in Dynamics 365 F&O. You will receive an order confirmation by email shortly.",
+  conf_p2: "Our planning assigns the order to a route. You can follow the status under <a onclick=\"navigate('orders')\">Orders</a>.",
+  btn_to_orders: "Go to orders", btn_to_home: "Go to my farm",
+  orders_title: "Orders", orders_sub: "Your orders, straight from Dynamics 365 F&O.",
+  th_order: "Order no.", th_date: "Ordered on", th_lines: "Lines", th_weight: "Weight", th_delivery: "Delivery", th_total: "Total", th_status: "Status", btn_details: "Details",
+  st_scheduled: "Scheduled", st_delivered: "Delivered", st_sent: "Sent to F&O", del_thu: "Thursday", del_delivered: "Delivered",
+  trace_toggle: "Behind the scenes", trace_empty: "No calls yet. Open an article or place an order."
+},
+
+nl: {
+  doc_title: "De Heus Voeders - Klantportaal (demo)", lang_label: "Taal",
+  brand_tag: "Dierenvoeding sinds 1911", brand_portal: "Klantportaal",
+  btn_login_portal: "Inloggen klantportaal",
+  hero_title: "Voer bestellen, wanneer het u uitkomt.",
+  hero_tag: "Bekijk uw silo's, ontvang uw eigen dagprijzen en plaats uw bestelling in een paar klikken. Direct gekoppeld aan onze voorraad en routeplanning.",
+  hero_cta1: "Naar het klantportaal", hero_cta2: "Wat kan ik hier?",
+  feat_title: "Uw bedrijf, uw afspraken, uw prijzen",
+  feat_sub: "Alles wat u nodig heeft om voer te bestellen, zonder te bellen.",
+  f1_t: "Uw eigen assortiment", f1_p: "U ziet alleen de voeders die bij uw diersoorten en contractafspraken horen.",
+  f2_t: "Actuele dagprijzen", f2_p: "Prijzen worden live opgehaald, inclusief uw afspraken, staffels en grondstoffenindex.",
+  f3_t: "Bestellen en volgen", f3_p: "Kies bulk, big bag of zakgoed, geef de silo op en volg uw levering tot aan het erf.",
+  footer: "De Heus Voeders B.V. · Demo-omgeving met fictieve gegevens · klantenservice@deheus.example",
+  login_brand: "De Heus Klantportaal", login_title: "Inloggen", login_sub: "Gebruik uw e-mailadres en wachtwoord.",
+  lbl_email: "E-mailadres", lbl_password: "Wachtwoord", login_btn: "Inloggen",
+  demo_note: "<strong>Demo:</strong> elke invoer werkt, klik gewoon op Inloggen.", back_site: "← Terug naar de website",
+  nav_home: "Mijn bedrijf", nav_shop: "Voer bestellen", nav_orders: "Bestellingen", nav_advice: "Voeradvies", nav_contact: "Contact",
+  tt_logout: "Uitloggen", tt_cart: "Winkelwagen", confirm_logout: "Uitloggen?",
+  alert_advice: "Voeradvies (niet uitgewerkt in demo)", alert_contact: "Contact (niet uitgewerkt in demo)",
+  alert_notifs: "Meldingen (demo)", alert_stats: "Meer cijfers (demo)", alert_invoices: "Facturen (demo)",
+  alert_terms: "Leveringsvoorwaarden (demo)", alert_details: "Orderdetails {id} (demo)",
+  bc_home: "Mijn bedrijf", bc_shop: "Voer bestellen", bc_cart: "Winkelwagen", bc_orders: "Bestellingen", bc_confirm: "Bevestiging",
+  greeting: "Welkom terug, {name}", dash_sub: "Zo staat uw bedrijf er vandaag voor.",
+  next_title: "Volgende levering: {date}", next_sub: "12 ton {product} naar Silo 1",
+  kpi_open: "Openstaande orders", kpi_open_sub: "1 onderweg deze week", kpi_30: "Voer besteld (30 dagen)", kpi_30_val: "52 ton", kpi_30_sub: "Melkvee en jongvee",
+  kpi_month: "Besteld deze maand", kpi_month_sub: "Over 6 orders", kpi_credit: "Kredietruimte", kpi_credit_sub: "van {limit}",
+  silos_title: "Uw silo's", silos_sub: "Gebaseerd op uw silosensoren en verbruiksgemiddelde",
+  silo_of: "{tons} van {cap} ton · nog ca. {days} dagen", reorder: "Bijbestellen",
+  c_open: "Lopende bestellingen", c_notifs: "Meldingen", c_figures: "Uw cijfers",
+  lnk_all_orders: "Alle bestellingen bekijken →", lnk_all_notifs: "Alle meldingen bekijken →", lnk_more_figs: "Meer cijfers bekijken →",
+  c_quick: "Snel aan de slag", btn_new_order: "Nieuwe bestelling", btn_repeat: "Laatste bestelling herhalen", btn_invoices: "Facturen bekijken",
+  c_advisor: "Uw voeradviseur", adv_role: "Voeradviseur melkvee", c_company: "Uw bedrijfsgegevens",
+  lbl_cust_no: "Klantnummer", lbl_ubn: "UBN",
+  oo1: "12 ton bulk · Silo 1 · route donderdag", oo2: "6 ton bulk · Silo 2 · volgende week", oo3: "2 pallets · geleverd gisteren",
+  n1_t: "Levering ingepland", n1_s: "Donderdag, tussen 07:00 en 11:00 uur", n2_t: "Silo 2 bijna leeg", n2_s: "Nog ca. 8 dagen voer in de silo",
+  n3_t: "Nieuwe prijslijst", n3_s: "Grondstoffenindex bijgewerkt op maandag", n4_t: "Factuur beschikbaar", n4_s: "Vervaldatum over 14 dagen",
+  i1_t: "Voerverbruik", i1_s: "Melkvee: 27,4 ton per maand", i2_t: "Voerkosten per 100 kg melk", i2_s: "€ 9,85 (vorige maand € 10,12)",
+  i3_t: "Mijn facturen", i3_s: "1 open factuur", i4_t: "Duurzaamheid", i4_s: "Voerfootprint 12% lager dan vorig jaar",
+  shop_title: "Voer bestellen", shop_sub: "Kies een diersoort of productgroep. U ziet alleen voeders binnen uw afspraken.",
+  sb_favs: "Favorieten", sb_open: "Lopende bestellingen", sb_quick: "Snel naar", lnk_my_orders: "Mijn bestellingen", lnk_cart: "Winkelwagen", lnk_terms: "Leveringsvoorwaarden",
+  search_ph: "Zoek op productnaam of artikelnummer, bijvoorbeeld 'kalverbrok'", no_favs: "Nog geen favorieten.",
+  n_products: "{n} producten", no_results: "Geen voer gevonden voor \"{q}\". Probeer een diersoort of een deel van de naam.",
+  back_shop: "← Terug naar voer bestellen", sb_groups: "Productgroepen", cat_search_ph: "Zoeken in deze productgroep...",
+  th_feed: "Voer", th_article: "Artikelnr.", th_forms: "Leveringsvorm", btn_order: "Bestellen", no_feed: "Geen voer gevonden. Wis de zoekterm om alles te zien.",
+  back_cat: "← Terug naar productgroep", article_no: "Artikelnummer {id}", tag_contract: "Op basis van uw contract", tag_daily: "Dagprijs",
+  sec_info: "Productinformatie", lbl_customer: "Klant", lbl_avail: "Beschikbare vormen", sec_order: "Uw bestelling",
+  lbl_form: "Leveringsvorm", lbl_qty: "Hoeveelheid", lbl_location: "Afleverlocatie", lbl_silo: "Silo", lbl_week: "Leverweek",
+  lbl_note: "Opmerking voor de chauffeur", note_ph: "Bijvoorbeeld: hek sluiten, bellen bij aankomst",
+  price_label: "Uw prijs per {unit}", price_live: "(live uit F&O)", price_loading: "Prijs ophalen uit F&O...",
+  btn_add: "Toevoegen aan winkelwagen", btn_refresh: "Prijs vernieuwen", fav_on: "★ Favoriet", fav_off: "☆ Favoriet", added: "✓ Toegevoegd", less: "Minder", more: "Meer",
+  qty_hint: "{qty} {unitQty} = {tons} t · minimaal {min} {unitMin}",
+  total_line: "Totaal excl. btw: <strong>{total}</strong> · {perTon} per ton", discount_chip: "staffel −{x}%", spark: "Laatste 8 weken: {sign}{x}%",
+  term_route: "Eerstvolgende route (2 tot 3 werkdagen)", term_route_short: "Eerstvolgende route", term_week: "Week {n}", term_date: "Specifieke datum (neem contact op)", term_date_short: "Specifieke datum",
+  unit_ton: "ton|ton", unit_bigbag: "big bag|big bags", unit_pallet: "pallet|pallets", unit_bucket: "emmer|emmers",
+  form_bulk_l: "Bulk (silowagen)", form_bigbag_l: "Big bag 1.000 kg", form_pallet_l: "Zakgoed 25 kg (pallet à 40 zakken)", form_bucket_l: "Emmer 22,5 kg",
+  form_bulk_s: "Bulk", form_bigbag_s: "Big bag", form_pallet_s: "Pallet", form_bucket_s: "Emmer",
+  loc1: "Hoofdlocatie, Dorpsstraat 14, Barneveld", loc1_s1: "Silo 1, melkveebrok (30 ton)", loc1_s2: "Silo 2, kalverbrok (15 ton)", loc1_s3: "Silo 3, mineralen (10 ton)",
+  loc2: "Jongveestal, Kerkweg 3, Terschuur", loc2_s1: "Silo 1, opfokbrok (20 ton)",
+  cart_title: "Winkelwagen", cart_sub: "Controleer uw bestelregels. Bij bevestigen wordt de verkooporder aangemaakt in Dynamics 365 F&O.",
+  lbl_subtotal: "Subtotaal", remove: "Regel verwijderen", note_inline: "Opmerking:",
+  sum_lines: "Aantal regels", sum_weight: "Totaal gewicht", sum_sub: "Subtotaal (excl. btw)", sum_vat: "Btw ({p}%)", sum_total: "Totaal",
+  btn_continue: "← Verder bestellen", btn_place: "Bestelling plaatsen", cart_foot: "Na bevestigen start een proces dat de regels als verkooporder naar Dynamics 365 F&O schrijft.",
+  cart_empty: "Uw winkelwagen is nog leeg.", btn_to_shop: "Voer bestellen",
+  conf_title: "Bedankt voor uw bestelling", conf_p: "Uw order staat in Dynamics 365 F&O. U ontvangt zo een orderbevestiging per e-mail.",
+  conf_p2: "Onze planning wijst de order aan een route toe. De status ziet u direct bij <a onclick=\"navigate('orders')\">Bestellingen</a>.",
+  btn_to_orders: "Naar bestellingen", btn_to_home: "Naar mijn bedrijf",
+  orders_title: "Bestellingen", orders_sub: "Uw orders, rechtstreeks uit Dynamics 365 F&O.",
+  th_order: "Ordernr.", th_date: "Besteld op", th_lines: "Regels", th_weight: "Gewicht", th_delivery: "Levering", th_total: "Totaal", th_status: "Status", btn_details: "Details",
+  st_scheduled: "Ingepland", st_delivered: "Geleverd", st_sent: "Doorgestuurd naar F&O", del_thu: "Donderdag", del_delivered: "Geleverd",
+  trace_toggle: "Achter de schermen", trace_empty: "Nog geen aanroepen. Open een artikel of plaats een bestelling."
+},
+
+cs: {
+  doc_title: "De Heus Krmiva - Zákaznický portál (demo)", lang_label: "Jazyk",
+  brand_tag: "Výživa zvířat od roku 1911", brand_portal: "Zákaznický portál",
+  btn_login_portal: "Přihlásit se do zákaznického portálu",
+  hero_title: "Objednejte krmivo, kdy se vám to hodí.",
+  hero_tag: "Zkontrolujte své sila, podívejte se na své denní ceny a objednejte během pár kliknutí. Přímé propojení s našimi zásobami a plánováním tras.",
+  hero_cta1: "Přejít do zákaznického portálu", hero_cta2: "Co zde mohu dělat?",
+  feat_title: "Vaše farma, vaše dohody, vaše ceny",
+  feat_sub: "Vše, co potřebujete k objednání krmiva, aniž byste museli telefonovat.",
+  f1_t: "Váš vlastní sortiment", f1_p: "Vidíte pouze krmiva, která odpovídají vašim zvířatům a smluvním podmínkám.",
+  f2_t: "Aktuální denní ceny", f2_p: "Ceny se načítají živě, včetně vašich dohod, objemových slev a indexu surovin.",
+  f3_t: "Objednávejte a sledujte", f3_p: "Vyberte volně ložené krmivo, big bag nebo pytlované zboží, zadejte silo a sledujte dodávku až na farmu.",
+  footer: "De Heus Voeders B.V. · Demo prostředí s fiktivními daty · zakaznicky.servis@deheus.example",
+  login_brand: "Zákaznický portál De Heus", login_title: "Přihlášení", login_sub: "Použijte svou e-mailovou adresu a heslo.",
+  lbl_email: "E-mailová adresa", lbl_password: "Heslo", login_btn: "Přihlásit se",
+  demo_note: "<strong>Demo:</strong> funguje jakýkoli vstup, stačí kliknout na Přihlásit se.", back_site: "← Zpět na web",
+  nav_home: "Moje farma", nav_shop: "Objednat krmivo", nav_orders: "Objednávky", nav_advice: "Poradenství ve výživě", nav_contact: "Kontakt",
+  tt_logout: "Odhlásit se", tt_cart: "Nákupní košík", confirm_logout: "Odhlásit se?",
+  alert_advice: "Poradenství ve výživě (v demu nerozpracováno)", alert_contact: "Kontakt (v demu nerozpracováno)",
+  alert_notifs: "Oznámení (demo)", alert_stats: "Další údaje (demo)", alert_invoices: "Faktury (demo)",
+  alert_terms: "Dodací podmínky (demo)", alert_details: "Detail objednávky {id} (demo)",
+  bc_home: "Moje farma", bc_shop: "Objednat krmivo", bc_cart: "Nákupní košík", bc_orders: "Objednávky", bc_confirm: "Potvrzení",
+  greeting: "Vítejte zpět, {name}", dash_sub: "Takto vypadá vaše farma dnes.",
+  next_title: "Další dodávka: {date}", next_sub: "12 t {product} do sila 1",
+  kpi_open: "Otevřené objednávky", kpi_open_sub: "1 na cestě tento týden", kpi_30: "Objednané krmivo (30 dní)", kpi_30_val: "52 t", kpi_30_sub: "Dojný skot a mladý skot",
+  kpi_month: "Objednáno tento měsíc", kpi_month_sub: "Celkem 6 objednávek", kpi_credit: "Dostupný kredit", kpi_credit_sub: "z {limit}",
+  silos_title: "Vaše sila", silos_sub: "Na základě senzorů ve silech a průměrné spotřeby",
+  silo_of: "{tons} z {cap} t · zbývá cca {days} dní", reorder: "Doobjednat",
+  c_open: "Otevřené objednávky", c_notifs: "Oznámení", c_figures: "Vaše údaje",
+  lnk_all_orders: "Zobrazit všechny objednávky →", lnk_all_notifs: "Zobrazit všechna oznámení →", lnk_more_figs: "Zobrazit další údaje →",
+  c_quick: "Rychlý start", btn_new_order: "Nová objednávka", btn_repeat: "Zopakovat poslední objednávku", btn_invoices: "Zobrazit faktury",
+  c_advisor: "Váš poradce pro výživu", adv_role: "Poradce pro výživu dojnic", c_company: "Údaje o vaší firmě",
+  lbl_cust_no: "Číslo zákazníka", lbl_ubn: "Registrační číslo farmy (UBN)",
+  oo1: "12 t volně ložené · Silo 1 · čtvrteční trasa", oo2: "6 t volně ložené · Silo 2 · příští týden", oo3: "2 palety · dodáno včera",
+  n1_t: "Dodávka naplánována", n1_s: "Čtvrtek, mezi 7:00 a 11:00", n2_t: "Silo 2 je téměř prázdné", n2_s: "V silu zbývá krmivo na cca 8 dní",
+  n3_t: "Nový ceník", n3_s: "Index surovin aktualizován v pondělí", n4_t: "Faktura k dispozici", n4_s: "Splatnost za 14 dní",
+  i1_t: "Spotřeba krmiva", i1_s: "Dojnice: 27,4 t měsíčně", i2_t: "Náklady na krmivo na 100 kg mléka", i2_s: "€ 9,85 (minulý měsíc € 10,12)",
+  i3_t: "Moje faktury", i3_s: "1 otevřená faktura", i4_t: "Udržitelnost", i4_s: "Uhlíková stopa krmiva o 12 % nižší než loni",
+  shop_title: "Objednat krmivo", shop_sub: "Vyberte druh zvířat nebo skupinu produktů. Vidíte pouze krmiva v rámci vašich dohod.",
+  sb_favs: "Oblíbené", sb_open: "Otevřené objednávky", sb_quick: "Rychlé odkazy", lnk_my_orders: "Moje objednávky", lnk_cart: "Nákupní košík", lnk_terms: "Dodací podmínky",
+  search_ph: "Hledat podle názvu produktu nebo čísla artiklu, např. 'krmivo pro telata'", no_favs: "Zatím žádné oblíbené položky.",
+  n_products: "{n} produktů", no_results: "Nenalezeno žádné krmivo pro „{q}“. Zkuste druh zvířat nebo část názvu.",
+  back_shop: "← Zpět na objednání krmiva", sb_groups: "Skupiny produktů", cat_search_ph: "Hledat v této skupině produktů...",
+  th_feed: "Krmivo", th_article: "Číslo artiklu", th_forms: "Forma dodání", btn_order: "Objednat", no_feed: "Nenalezeno žádné krmivo. Vymažte hledání a zobrazí se vše.",
+  back_cat: "← Zpět na skupinu produktů", article_no: "Číslo artiklu {id}", tag_contract: "Podle vaší smlouvy", tag_daily: "Denní cena",
+  sec_info: "Informace o produktu", lbl_customer: "Zákazník", lbl_avail: "Dostupné formy", sec_order: "Vaše objednávka",
+  lbl_form: "Forma dodání", lbl_qty: "Množství", lbl_location: "Místo dodání", lbl_silo: "Silo", lbl_week: "Týden dodání",
+  lbl_note: "Poznámka pro řidiče", note_ph: "Například: zavřít bránu, zavolat při příjezdu",
+  price_label: "Vaše cena za {unit}", price_live: "(živě z F&O)", price_loading: "Načítání ceny z F&O...",
+  btn_add: "Přidat do košíku", btn_refresh: "Obnovit cenu", fav_on: "★ Oblíbené", fav_off: "☆ Oblíbené", added: "✓ Přidáno", less: "Méně", more: "Více",
+  qty_hint: "{qty} {unitQty} = {tons} t · minimum {min} {unitMin}",
+  total_line: "Celkem bez DPH: <strong>{total}</strong> · {perTon} za tunu", discount_chip: "objemová sleva −{x} %", spark: "Posledních 8 týdnů: {sign}{x} %",
+  term_route: "Nejbližší trasa (2 až 3 pracovní dny)", term_route_short: "Nejbližší trasa", term_week: "{n}. týden", term_date: "Konkrétní datum (kontaktujte nás)", term_date_short: "Konkrétní datum",
+  unit_ton: "tuna|tuny|tun", unit_bigbag: "big bag|big bagy|big bagů", unit_pallet: "paleta|palety|palet", unit_bucket: "kbelík|kbelíky|kbelíků",
+  form_bulk_l: "Volně ložené (cisterna do sila)", form_bigbag_l: "Big bag 1 000 kg", form_pallet_l: "Pytlované zboží 25 kg (paleta po 40 pytlích)", form_bucket_l: "Kbelík 22,5 kg",
+  form_bulk_s: "Volně ložené", form_bigbag_s: "Big bag", form_pallet_s: "Paleta", form_bucket_s: "Kbelík",
+  loc1: "Hlavní provozovna, Dorpsstraat 14, Barneveld", loc1_s1: "Silo 1, krmivo pro dojnice (30 t)", loc1_s2: "Silo 2, krmivo pro telata (15 t)", loc1_s3: "Silo 3, minerály (10 t)",
+  loc2: "Stáj pro mladý skot, Kerkweg 3, Terschuur", loc2_s1: "Silo 1, krmivo pro odchov (20 t)",
+  cart_title: "Nákupní košík", cart_sub: "Zkontrolujte řádky objednávky. Po potvrzení se v Dynamics 365 F&O vytvoří prodejní objednávka.",
+  lbl_subtotal: "Mezisoučet", remove: "Odebrat řádek", note_inline: "Poznámka:",
+  sum_lines: "Počet řádků", sum_weight: "Celková hmotnost", sum_sub: "Mezisoučet (bez DPH)", sum_vat: "DPH ({p} %)", sum_total: "Celkem",
+  btn_continue: "← Pokračovat v objednávání", btn_place: "Odeslat objednávku", cart_foot: "Po potvrzení proces zapíše řádky jako prodejní objednávku do Dynamics 365 F&O.",
+  cart_empty: "Váš košík je zatím prázdný.", btn_to_shop: "Objednat krmivo",
+  conf_title: "Děkujeme za vaši objednávku", conf_p: "Vaše objednávka je v Dynamics 365 F&O. Brzy obdržíte potvrzení objednávky e-mailem.",
+  conf_p2: "Naše plánování přiřadí objednávku ke trase. Stav můžete sledovat v sekci <a onclick=\"navigate('orders')\">Objednávky</a>.",
+  btn_to_orders: "Přejít na objednávky", btn_to_home: "Přejít na Moji farmu",
+  orders_title: "Objednávky", orders_sub: "Vaše objednávky přímo z Dynamics 365 F&O.",
+  th_order: "Č. objednávky", th_date: "Datum objednání", th_lines: "Řádky", th_weight: "Hmotnost", th_delivery: "Dodání", th_total: "Celkem", th_status: "Stav", btn_details: "Detail",
+  st_scheduled: "Naplánováno", st_delivered: "Dodáno", st_sent: "Odesláno do F&O", del_thu: "Čtvrtek", del_delivered: "Dodáno",
+  trace_toggle: "Za oponou", trace_empty: "Zatím žádná volání. Otevřete artikl nebo odešlete objednávku."
+}
+};
+
+/* Category texts: [EN name, EN desc, NL name, NL desc, CS name, CS desc] */
+const CAT_TXT = {
+  dairy:     ["Dairy cattle", "Concentrates, dry cows and grazing feed", "Melkvee", "Krachtvoer, droge koeien en weidebrok", "Dojný skot", "Koncentráty, krávy na sucho a krmivo na pastvu"],
+  calves:    ["Calves & young stock", "Calf feed, rearing and milk replacer", "Kalveren & jongvee", "Kalverbrok, opfok en melkpoeder", "Telata a mladý skot", "Krmivo pro telata, odchov a mléčné náhrady"],
+  pigs:      ["Pigs", "Piglets, finishing pigs and sows", "Varkens", "Biggen, vleesvarkens en zeugen", "Prasata", "Selata, výkrm a prasnice"],
+  poultry:   ["Poultry", "Layers, broilers and rearing", "Pluimvee", "Leghennen, vleeskuikens en opfok", "Drůbež", "Nosnice, brojleři a odchov"],
+  goatsheep: ["Goats & sheep", "Dairy goats, lambs and pregnancy", "Geiten & schapen", "Melkgeiten, lammeren en dracht", "Kozy a ovce", "Dojné kozy, jehňata a březost"],
+  horses:    ["Horses", "Maintenance, sport and foals", "Paarden", "Onderhoud, sport en veulens", "Koně", "Udržovací, sportovní a pro hříbata"],
+  minerals:  ["Minerals & supplements", "Mineral mixes, lick buckets, premixes", "Mineralen & supplementen", "Mineralenmixen, likemmers, premixen", "Minerály a doplňky", "Minerální směsi, lizy, premixy"],
+  rawmat:    ["Raw materials", "Soy, rapeseed, beet pulp, molasses", "Grondstoffen", "Soja, raapzaad, bietenpulp, melasse", "Suroviny", "Soja, řepka, řepné řízky, melasa"]
+};
+const CAT_ICON = { dairy: "🐄", calves: "🐮", pigs: "🐖", poultry: "🐔", goatsheep: "🐐", horses: "🐴", minerals: "🧂", rawmat: "🌽" };
+
+/* Product texts: [id, EN name, EN spec, NL name, NL spec, CS name, CS spec] */
+const P_TXT = [
+  ["2001001","Dairy Feed Balance 18","18% CP · 4 mm pellet","Melkveebrok Balans 18","18% RE · korrel 4 mm","Krmivo pro dojnice Balance 18","18 % NL · granule 4 mm"],
+  ["2001004","Dairy Feed Energy 20","20% CP · high rumen fermentation","Melkveebrok Energie 20","20% RE · hoge pensfermentatie","Krmivo pro dojnice Energy 20","20 % NL · vysoká fermentace v bachoru"],
+  ["2001008","Dry Cow Feed","14% CP · low potassium","Droogstaande koeien brok","14% RE · laag kalium","Krmivo pro krávy na sucho","14 % NL · nízký obsah draslíku"],
+  ["2001012","Summer Grazing Feed 16","16% CP · supplement to grass","Weidebrok Zomer 16","16% RE · aanvulling op gras","Letní krmivo na pastvu 16","16 % NL · doplněk k trávě"],
+  ["2001015","Production Concentrate Plus","22% CP · for high-yielding cows","Krachtvoer Productie Plus","22% RE · voor hoogproductieve koeien","Produkční koncentrát Plus","22 % NL · pro vysokoprodukční krávy"],
+
+  ["2002001","Calf Feed Start 16","16% CP · muesli, highly palatable","Kalverbrok Start 16","16% RE · muesli, goed smakelijk","Krmivo pro telata Start 16","16 % NL · müsli, vysoce chutné"],
+  ["2002004","Calf Feed Rearing 18","18% CP · rearing heifer calves","Kalverbrok Opfok 18","18% RE · opfok vaarskalveren","Krmivo pro odchov telat 18","18 % NL · odchov jalovic"],
+  ["2002009","Calf Milk Replacer Premium","Milk replacer 22/18 · whole-milk base","Kalvermelkpoeder Premium","Melkpoeder 22/18 · volle melk","Mléčná náhrada pro telata Premium","Mléčná náhrada 22/18 · na bázi plnotučného mléka"],
+  ["2002012","Roughage Mix Young Stock","Feed with structural fibre","Ruwvoermix Jongvee","Brok met structuurvezel","Směs s objemným krmivem pro mladý skot","Krmivo se strukturální vlákninou"],
+
+  ["2003001","Piglet Starter Feed","Weaned piglets up to 15 kg","Biggenbrok Opstart","Speenbiggen tot 15 kg","Startér pro selata","Odstavená selata do 15 kg"],
+  ["2003004","Piglet Weaner Feed","Weaned piglets 15-30 kg","Biggenbrok Speen","Speenbiggen 15-30 kg","Krmivo pro odchov selat","Odstavená selata 15–30 kg"],
+  ["2003008","Finishing Pig Feed Phase 1","Weight class 30-70 kg","Vleesvarkensbrok Fase 1","Gewichtsklasse 30-70 kg","Krmivo pro výkrm prasat fáze 1","Hmotnostní kategorie 30–70 kg"],
+  ["2003009","Finishing Pig Feed Phase 2","Weight class 70-120 kg","Vleesvarkensbrok Fase 2","Gewichtsklasse 70-120 kg","Krmivo pro výkrm prasat fáze 2","Hmotnostní kategorie 70–120 kg"],
+  ["2003014","Lactating Sow Feed","Sows in lactation, 16% CP","Zeugenbrok Lacterend","Zeugen in lactatie, 16% RE","Krmivo pro kojící prasnice","Prasnice v laktaci, 16 % NL"],
+
+  ["2004001","Layer Feed Production","Laying period 20-80 weeks","Leghennenbrok Productie","Legperiode 20-80 weken","Krmivo pro nosnice – produkce","Snáškové období 20–80 týdnů"],
+  ["2004004","Layer Rearing Feed","Rearing up to 17 weeks","Opfokbrok Leghennen","Opfok tot 17 weken","Krmivo pro odchov nosnic","Odchov do 17 týdnů"],
+  ["2004008","Broiler Starter Feed","Day 0-10, crumble","Vleeskuikenbrok Start","Dag 0-10, kruimel","Startér pro brojlery","Den 0–10, drobená forma"],
+  ["2004009","Broiler Grower Feed","Day 10-28, pellet","Vleeskuikenbrok Groei","Dag 10-28, korrel","Krmivo pro brojlery – růst","Den 10–28, granule"],
+  ["2004010","Broiler Finisher Feed","Day 28 to slaughter, pellet","Vleeskuikenbrok Afmest","Dag 28-slacht, korrel","Krmivo pro brojlery – výkrm","Den 28 až porážka, granule"],
+
+  ["2005001","Dairy Goat Feed","Milking goats, 17% CP","Geitenbrok Melk","Melkgeiten, 17% RE","Krmivo pro dojné kozy","Dojné kozy, 17 % NL"],
+  ["2005004","Ewe Feed Late Pregnancy","Last 6 weeks of pregnancy","Schapenbrok Dracht","Laatste 6 weken dracht","Krmivo pro březí ovce","Posledních 6 týdnů březosti"],
+  ["2005007","Lamb Feed","Rearing lambs","Lammerenbrok","Opfok lammeren","Krmivo pro jehňata","Odchov jehňat"],
+
+  ["2006001","Horse Muesli Sport","Sport horses, oat-rich","Paardenmuesli Sport","Sportpaarden, haverrijk","Müsli pro koně Sport","Sportovní koně, s vysokým podílem ovsa"],
+  ["2006004","Horse Feed Maintenance","Maintenance, pellet","Paardenbrok Onderhoud","Onderhoud, korrel","Krmivo pro koně – udržovací","Udržovací, granule"],
+  ["2006008","Foal Feed","Foals and young horses","Veulenbrok","Veulens en jonge paarden","Krmivo pro hříbata","Hříbata a mladí koně"],
+
+  ["2007001","Mineral Mix Dairy","Supplement to concentrate, 25% Ca","Mineralenmix Melkvee","Aanvulling krachtvoer, 25% Ca","Minerální směs pro dojnice","Doplněk ke koncentrátu, 25 % Ca"],
+  ["2007004","Mineral Mix Dry Cows","Low Ca, high Mg","Mineralenmix Droogstaand","Lage Ca, hoge Mg","Minerální směs pro krávy na sucho","Nízký Ca, vysoký Mg"],
+  ["2007008","Cattle Lick Bucket","Free intake in the barn or on pasture","Likemmer Rundvee","Vrije opname op stal of weide","Liz pro skot (kbelík)","Volný příjem ve stáji nebo na pastvě"],
+  ["2007011","Rumen Buffer","Buffer against rumen acidosis","Pensbuffer","Buffer tegen pensverzuring","Bachorový pufr","Pufr proti acidóze bachoru"],
+
+  ["2008001","Soybean Meal 46%","Protein-rich, certified GMO-free","Sojaschroot 46%","Eiwitrijk, GMO-vrij gecertificeerd","Sójový extrahovaný šrot 46 %","Bohatý na bílkoviny, certifikovaně bez GMO"],
+  ["2008004","Rapeseed Meal","Protein source, 34% CP","Raapzaadschroot","Eiwitbron, 34% RE","Řepkový extrahovaný šrot","Zdroj bílkovin, 34 % NL"],
+  ["2008008","Dried Sugar Beet Pulp","Energy source for dairy cattle","Bietenpulp gedroogd","Energiebron voor melkvee","Sušené řepné řízky","Zdroj energie pro dojnice"],
+  ["2008011","Molasses","Palatability enhancer and energy source","Melasse","Smaakmaker en energiebron","Melasa","Zlepšovač chutnosti a zdroj energie"]
+];
+const PT = {}; P_TXT.forEach(r => PT[r[0]] = r);
+
+let lang = 'en';
+try { const s = localStorage.getItem('dh_lang'); if (s && LANGS[s]) lang = s; } catch (e) {}
+
+function t(key, vars) {
+  let s = (I18N[lang] && I18N[lang][key]);
+  if (s === undefined) s = I18N.en[key];
+  if (s === undefined) s = key;
+  if (vars) for (const k in vars) s = s.split('{' + k + '}').join(vars[k]);
+  return s;
+}
+function pluralIdx(n) { return lang === 'cs' ? (n === 1 ? 0 : (n >= 2 && n <= 4 ? 1 : 2)) : (n === 1 ? 0 : 1); }
+function unitName(unitKey, qty) { const parts = t(unitKey).split('|'); return parts[Math.min(pluralIdx(qty), parts.length - 1)]; }
+const L = () => LANGS[lang];
+const pn = id => PT[id][1 + 2 * L().idx];
+const ps = id => PT[id][2 + 2 * L().idx];
+const cn = id => CAT_TXT[id][2 * L().idx];
+const cd = id => CAT_TXT[id][2 * L().idx + 1];
+
+/* ================================================================
+   CONFIG - change this for another customer demo
+   ================================================================ */
+const CONFIG = {
+  vatRate: 0.09,   // Check the VAT rate that applies per product group and country before presenting
+  customer: {
+    name: "Jan van der Veen", firstName: "Jan",
+    company: "Van der Veen Dairy Farm", accountId: "2048713", ubn: "1234567",
+    address: "Dorpsstraat 14, 3771 AB Barneveld",
+    am: { name: "Marloes Kuipers", initials: "MK", phone: "+31 (0)6 1234 5678", email: "m.kuipers@deheus.example" },
+    locations: [ { key: "loc1", silos: 3 }, { key: "loc2", silos: 1 } ]
+  },
+  // Dashboard silos (level 0-1; usage = tons per day)
+  silos: [
+    { n: 1, cap: 30, level: 0.62, usage: 0.9,  productId: "2001001" },
+    { n: 2, cap: 15, level: 0.18, usage: 0.35, productId: "2002001" },
+    { n: 3, cap: 10, level: 0.85, usage: 0.12, productId: "2007001" }
+  ],
+  // Delivery forms: kg per unit, surcharge per unit (packaging/handling)
+  forms: {
+    bulk:   { unitKey: "unit_ton",    kg: 1000, sur: 0,   min: 5, step: 1, silo: true },
+    bigbag: { unitKey: "unit_bigbag", kg: 1000, sur: 9,   min: 1, step: 1, silo: false },
+    pallet: { unitKey: "unit_pallet", kg: 1000, sur: 42,  min: 1, step: 1, silo: false },
+    bucket: { unitKey: "unit_bucket", kg: 22.5, sur: 1.2, min: 4, step: 4, silo: false }
+  },
+  // [id, category, delivery forms, price/ton min, price/ton max]
+  products: [
+    ["2001001","dairy",["bulk","bigbag","pallet"],318,352], ["2001004","dairy",["bulk","bigbag","pallet"],342,378],
+    ["2001008","dairy",["bulk","bigbag"],305,334], ["2001012","dairy",["bulk","bigbag","pallet"],301,329], ["2001015","dairy",["bulk","bigbag"],358,392],
+    ["2002001","calves",["bulk","bigbag","pallet"],372,408], ["2002004","calves",["bulk","bigbag","pallet"],348,381],
+    ["2002009","calves",["pallet","bucket"],1480,1620], ["2002012","calves",["bulk","bigbag"],296,325],
+    ["2003001","pigs",["bulk","bigbag","pallet"],498,545], ["2003004","pigs",["bulk","bigbag"],412,449], ["2003008","pigs",["bulk","bigbag"],284,311],
+    ["2003009","pigs",["bulk","bigbag"],271,298], ["2003014","pigs",["bulk","bigbag"],318,346],
+    ["2004001","poultry",["bulk","bigbag","pallet"],332,364], ["2004004","poultry",["bulk","bigbag"],318,347], ["2004008","poultry",["bulk","bigbag"],388,424],
+    ["2004009","poultry",["bulk","bigbag"],362,396], ["2004010","poultry",["bulk","bigbag"],351,383],
+    ["2005001","goatsheep",["bulk","bigbag","pallet"],361,395], ["2005004","goatsheep",["bigbag","pallet"],338,369], ["2005007","goatsheep",["bigbag","pallet"],352,386],
+    ["2006001","horses",["pallet","bucket"],548,602], ["2006004","horses",["pallet","bigbag"],412,452], ["2006008","horses",["pallet","bucket"],578,634],
+    ["2007001","minerals",["bulk","bigbag","pallet"],684,742], ["2007004","minerals",["bigbag","pallet"],712,775],
+    ["2007008","minerals",["bucket"],880,960], ["2007011","minerals",["bigbag","pallet"],590,642],
+    ["2008001","rawmat",["bulk","bigbag"],455,498], ["2008004","rawmat",["bulk","bigbag"],268,296], ["2008008","rawmat",["bulk","bigbag"],232,258], ["2008011","rawmat",["bulk"],198,224]
+  ].map(a => ({ id: a[0], cat: a[1], forms: a[2], priceMin: a[3], priceMax: a[4] })),
+  categoryIds: ["dairy","calves","pigs","poultry","goatsheep","horses","minerals","rawmat"],
+
+  openOrders: [ { pid: "2001001", key: "oo1", dot: "warning" }, { pid: "2002001", key: "oo2", dot: "info" }, { pid: "2007001", key: "oo3", dot: "success" } ],
+  notifications: [ { k: "n1", dot: "info" }, { k: "n2", dot: "warning" }, { k: "n3", dot: "muted" }, { k: "n4", dot: "muted" } ],
+  insights: [ { icon: "📈", k: "i1" }, { icon: "🥛", k: "i2" }, { icon: "🧾", k: "i3" }, { icon: "🌱", k: "i4" } ]
+};
+
+// Order history (as it would come from F&O); ago = days ago
+CONFIG.orders = [
+  { id: "SO-2026-04812", ago: 2,  lines: 3, kg: 18000, deliveryKey: "del_thu",       total: 6125.40, statusKey: "st_scheduled", statusType: "info" },
+  { id: "SO-2026-04786", ago: 6,  lines: 2, kg: 8000,  deliveryKey: "del_delivered", total: 2894.10, statusKey: "st_delivered", statusType: "success" },
+  { id: "SO-2026-04754", ago: 13, lines: 4, kg: 26000, deliveryKey: "del_delivered", total: 9120.75, statusKey: "st_delivered", statusType: "success" },
+  { id: "SO-2026-04721", ago: 20, lines: 1, kg: 12000, deliveryKey: "del_delivered", total: 4012.00, statusKey: "st_delivered", statusType: "success" },
+  { id: "SO-2026-04687", ago: 27, lines: 2, kg: 15000, deliveryKey: "del_delivered", total: 5230.55, statusKey: "st_delivered", statusType: "success" }
+];
+
+/* ================================================================
+   STATE & HELPERS
+   ================================================================ */
+const state = { currentPage: "landing", loggedIn: false, currentCategory: null, currentArticle: null, currentPrice: null, cart: [], favs: ["2001001"], orderCounter: 4813, trace: [] };
+
+const productById = id => CONFIG.products.find(p => p.id === id);
+const catEmoji = id => CAT_ICON[id] || "🌾";
+function fmtEur(n, d) { d = d === undefined ? 2 : d; return '€ ' + n.toLocaleString(L().locale, { minimumFractionDigits: d, maximumFractionDigits: d }); }
+function fmtNum(n, d) { return n.toLocaleString(L().locale, { minimumFractionDigits: 0, maximumFractionDigits: d || 0 }); }
+function seed(str) { let h = 0; for (const c of str) h = (h * 31 + c.charCodeAt(0)) >>> 0; return (h % 1000) / 1000; }
+function isoWeek(d) {
+  const x = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = x.getUTCDay() || 7; x.setUTCDate(x.getUTCDate() + 4 - day);
+  const y0 = new Date(Date.UTC(x.getUTCFullYear(), 0, 1));
+  return Math.ceil(((x - y0) / 86400000 + 1) / 7);
+}
+function daysFromNow(n) { const d = new Date(); d.setDate(d.getDate() + n); return d; }
+function fmtDate(d) { return d.toLocaleDateString(L().locale, { day: '2-digit', month: '2-digit', year: 'numeric' }); }
+
+/* Pricing logic (in production: Power Pages -> Dataverse virtual table -> F&O price discovery) */
+function priceFor(p, formKey, qty) {
+  const f = CONFIG.forms[formKey];
+  const perTon = p.priceMin + (p.priceMax - p.priceMin) * seed(p.id);
+  const kg = f.kg * qty;
+  const discount = kg >= 20000 ? 0.025 : (kg >= 10000 ? 0.01 : 0);
+  return { unit: (perTon * f.kg / 1000 + f.sur) * (1 - discount), perTon: perTon * (1 - discount), discount };
+}
+
+/* Delivery terms are stored language-neutral: 'route' | 'week:N' | 'date' */
+function termOptions() {
+  const wk = isoWeek(new Date()), o = [{ v: 'route', l: t('term_route') }];
+  for (let i = 1; i <= 3; i++) { const n = ((wk + i - 1) % 52) + 1; o.push({ v: 'week:' + n, l: t('term_week', { n }) }); }
+  o.push({ v: 'date', l: t('term_date') });
+  return o;
+}
+function termLabel(v, short) {
+  if (v === 'route') return t(short ? 'term_route_short' : 'term_route');
+  if (v === 'date')  return t(short ? 'term_date_short' : 'term_date');
+  return t('term_week', { n: v.split(':')[1] });
+}
+const locLabel = i => t(CONFIG.customer.locations[i].key);
+const siloLabel = (i, j) => t(CONFIG.customer.locations[i].key + '_s' + (j + 1));
+
+
+
+/* ================================================================
+   EXTRA STRINGS FOR THE POWER PAGES STYLE LAYOUT
+   ================================================================ */
+const X = {
+en: {
+  pp_home: "Home", pp_cart: "Cart", pp_profile: "Profile", pp_signout: "Sign out", pp_signin: "Sign in", pp_toggle_nav: "Menu",
+  pp_home_title: "Welcome to the De Heus customer portal", pp_home_sub: "Order feed, follow your deliveries and see your agreements online.",
+  pp_remember: "Remember me", pp_forgot: "Forgot your password?",
+  pp_footer: "© 2026 De Heus Voeders B.V. All rights reserved. Demo environment with fictional data.", pp_privacy: "Privacy", pp_terms: "Terms of use",
+  pp_open: "Open", pp_c1_p: "Browse your range and place an order.", pp_c2_p: "Follow your orders and deliveries.",
+  pp_search: "Search", pp_group: "Product group", pp_all: "All", pp_view: "View", pp_view_all: "Contract products", pp_view_favs: "My favourites", pp_view_orders_all: "All orders",
+  pp_showing: "Showing {a} to {b} of {n} records", pp_no_records: "No records to display.", pp_prev: "Previous", pp_next: "Next", pp_specification: "Specification",
+  pp_cancel: "Cancel", pp_sec_price: "Price", pp_total_excl: "Total excl. VAT", pp_per_ton: "per ton", pp_volume_disc: "Volume discount applied: {x}%", pp_required: "Fields marked with * are required.",
+  pp_success_title: "Your order has been submitted", pp_success_p: "Order {id} has been created in Dynamics 365 F&O. You will receive a confirmation by email.",
+  pp_order_title: "Order {id}", pp_total_incl: "Total incl. VAT", pp_order_lines: "Order lines", pp_net: "Net amount", pp_back_orders: "Back to orders",
+  pp_components: "Show Power Pages components", pp_legend_oob: "Out-of-the-box component", pp_legend_low: "Configuration / Liquid", pp_legend_code: "Custom code",
+  pp_alert_profile: "Profile page (not built out in this demo)", pp_silo_alert: "{title}. {sub}."
+},
+nl: {
+  pp_home: "Home", pp_cart: "Winkelwagen", pp_profile: "Profiel", pp_signout: "Uitloggen", pp_signin: "Inloggen", pp_toggle_nav: "Menu",
+  pp_home_title: "Welkom op het klantportaal van De Heus", pp_home_sub: "Bestel voer, volg uw leveringen en bekijk uw afspraken online.",
+  pp_remember: "Onthoud mij", pp_forgot: "Wachtwoord vergeten?",
+  pp_footer: "© 2026 De Heus Voeders B.V. Alle rechten voorbehouden. Demo-omgeving met fictieve gegevens.", pp_privacy: "Privacy", pp_terms: "Gebruiksvoorwaarden",
+  pp_open: "Openen", pp_c1_p: "Bekijk uw assortiment en plaats een bestelling.", pp_c2_p: "Volg uw bestellingen en leveringen.",
+  pp_search: "Zoeken", pp_group: "Productgroep", pp_all: "Alle", pp_view: "Weergave", pp_view_all: "Contractproducten", pp_view_favs: "Mijn favorieten", pp_view_orders_all: "Alle bestellingen",
+  pp_showing: "{a} tot {b} van {n} records", pp_no_records: "Geen records om weer te geven.", pp_prev: "Vorige", pp_next: "Volgende", pp_specification: "Specificatie",
+  pp_cancel: "Annuleren", pp_sec_price: "Prijs", pp_total_excl: "Totaal excl. btw", pp_per_ton: "per ton", pp_volume_disc: "Staffelkorting toegepast: {x}%", pp_required: "Velden met * zijn verplicht.",
+  pp_success_title: "Uw bestelling is verzonden", pp_success_p: "Order {id} is aangemaakt in Dynamics 365 F&O. U ontvangt een bevestiging per e-mail.",
+  pp_order_title: "Order {id}", pp_total_incl: "Totaal incl. btw", pp_order_lines: "Orderregels", pp_net: "Nettobedrag", pp_back_orders: "Terug naar bestellingen",
+  pp_components: "Toon Power Pages-componenten", pp_legend_oob: "Standaardcomponent", pp_legend_low: "Configuratie / Liquid", pp_legend_code: "Maatwerkcode",
+  pp_alert_profile: "Profielpagina (niet uitgewerkt in demo)", pp_silo_alert: "{title}. {sub}."
+},
+cs: {
+  pp_home: "Domů", pp_cart: "Košík", pp_profile: "Profil", pp_signout: "Odhlásit se", pp_signin: "Přihlásit se", pp_toggle_nav: "Menu",
+  pp_home_title: "Vítejte v zákaznickém portálu De Heus", pp_home_sub: "Objednávejte krmivo, sledujte dodávky a prohlížejte své dohody online.",
+  pp_remember: "Zapamatovat si mě", pp_forgot: "Zapomněli jste heslo?",
+  pp_footer: "© 2026 De Heus Voeders B.V. Všechna práva vyhrazena. Demo prostředí s fiktivními daty.", pp_privacy: "Ochrana soukromí", pp_terms: "Podmínky použití",
+  pp_open: "Otevřít", pp_c1_p: "Prohlédněte si svůj sortiment a objednejte.", pp_c2_p: "Sledujte své objednávky a dodávky.",
+  pp_search: "Hledat", pp_group: "Skupina produktů", pp_all: "Vše", pp_view: "Zobrazení", pp_view_all: "Smluvní produkty", pp_view_favs: "Moje oblíbené", pp_view_orders_all: "Všechny objednávky",
+  pp_showing: "Zobrazeno {a} až {b} z {n} záznamů", pp_no_records: "Žádné záznamy k zobrazení.", pp_prev: "Předchozí", pp_next: "Další", pp_specification: "Specifikace",
+  pp_cancel: "Zrušit", pp_sec_price: "Cena", pp_total_excl: "Celkem bez DPH", pp_per_ton: "za tunu", pp_volume_disc: "Uplatněna objemová sleva: {x} %", pp_required: "Pole označená * jsou povinná.",
+  pp_success_title: "Vaše objednávka byla odeslána", pp_success_p: "Objednávka {id} byla vytvořena v Dynamics 365 F&O. Potvrzení obdržíte e-mailem.",
+  pp_order_title: "Objednávka {id}", pp_total_incl: "Celkem s DPH", pp_order_lines: "Řádky objednávky", pp_net: "Částka bez DPH", pp_back_orders: "Zpět na objednávky",
+  pp_components: "Zobrazit komponenty Power Pages", pp_legend_oob: "Standardní komponenta", pp_legend_low: "Konfigurace / Liquid", pp_legend_code: "Vlastní kód",
+  pp_alert_profile: "Stránka profilu (v demu nerozpracováno)", pp_silo_alert: "{title}. {sub}."
+}
+};
+for (const l in X) Object.assign(I18N[l], X[l]);
+
+Object.assign(state, {
+  shop: { page: 1, q: '', group: 'all', view: 'all', sort: 'name', dir: 1 },
+  ordersView: 'all', currentOrder: null, param: null
+});
+const PAGE_SIZE = 8;
+
+/* ---- log + overlay toggles ---- */
+function trace(html) { state.trace.unshift(html); state.trace = state.trace.slice(0, 12); renderTrace(); }
+function renderTrace() {
+  document.getElementById('trace-lines').innerHTML = state.trace.length
+    ? state.trace.map(l => '<div class="t-line">' + l + '</div>').join('')
+    : '<div class="t-empty">' + t('trace_empty') + '</div>';
+}
+function toggleTrace() { document.getElementById('trace-panel').classList.toggle('hidden'); }
+function togglePP() { document.body.classList.toggle('show-pp'); document.getElementById('pp-toggle').classList.toggle('on', document.body.classList.contains('show-pp')); }
+document.addEventListener('click', () => document.getElementById('auth-user').classList.remove('open'));
+
+/* ================================================================
+   LANGUAGE
+   ================================================================ */
+function applyI18n() {
+  document.documentElement.lang = lang;
+  document.title = t('login_brand');
+  document.getElementById('site-name').textContent = t('login_brand');
+  document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = t(el.dataset.i18n));
+  document.querySelectorAll('[data-i18n-html]').forEach(el => el.innerHTML = t(el.dataset.i18nHtml));
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => el.placeholder = t(el.dataset.i18nPh));
+  document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle); el.setAttribute('aria-label', t(el.dataset.i18nTitle)); });
+  const s = document.getElementById('lang-select');
+  if (!s.options.length) s.innerHTML = Object.keys(LANGS).map(k => `<option value="${k}">${LANGS[k].name}</option>`).join('');
+  s.value = lang;
+  renderTrace();
+}
+function setLang(l) {
+  if (!LANGS[l]) return;
+  lang = l;
+  try { localStorage.setItem('dh_lang', l); } catch (e) {}
+  applyI18n();
+  if (state.currentPage === 'article') {
+    const ids = ['order-form','order-qty','order-location','order-silo','order-term','order-note'];
+    const keep = ids.map(id => document.getElementById(id).value);
+    renderPage('article');
+    ids.forEach((id, i) => { document.getElementById(id).value = keep[i]; if (id === 'order-location') renderSiloOptions(); });
+    fetchPrice();
+  } else renderPage(state.currentPage);
+  updateChrome();
+}
+
+/* ================================================================
+   NAVIGATION
+   ================================================================ */
+function go(page) { if (!state.loggedIn) navigate('login'); else navigate(page); }
+
+function navigate(page, param) {
+  if (['shop','article','cart','orders','order','done'].includes(page) && !state.loggedIn) page = 'login';
+  state.currentPage = page;
+  if (page === 'article' && param) state.currentArticle = param;
+  if (page === 'order' && param) state.currentOrder = param;
+  document.querySelectorAll('.pp-page').forEach(p => p.classList.add('hidden'));
+  document.getElementById('page-' + page).classList.remove('hidden');
+  document.getElementById('navbar-nav').classList.remove('open');
+  renderPage(page);
+  updateChrome();
+  window.scrollTo(0, 0);
+}
+
+function renderPage(page) {
+  if (page === 'home') renderHome();
+  if (page === 'shop') renderShop();
+  if (page === 'article') renderArticle();
+  if (page === 'cart') renderCart();
+  if (page === 'orders') renderOrders();
+  if (page === 'order') renderOrderDetail();
+  if (page === 'done') document.getElementById('done-text').textContent = t('pp_success_p', { id: state.lastOrder || '' });
+}
+
+function updateChrome() {
+  const p = state.currentPage;
+  const key = ({ home: 'home', shop: 'shop', article: 'shop', cart: 'shop', done: 'shop', orders: 'orders', order: 'orders' })[p];
+  ['home','shop','orders'].forEach(k => document.getElementById('nav-' + k).classList.toggle('active', k === key));
+  document.getElementById('auth-anon').classList.toggle('hidden', state.loggedIn);
+  document.getElementById('auth-user').classList.toggle('hidden', !state.loggedIn);
+  document.getElementById('nav-cart').classList.toggle('hidden', !state.loggedIn);
+  document.getElementById('user-name').textContent = CONFIG.customer.name;
+  document.getElementById('cart-badge').textContent = state.cart.length;
+  document.getElementById('cart-badge').classList.toggle('hidden', !state.cart.length);
+
+  const home = `<li><a onclick="navigate('home')">${t('pp_home')}</a></li>`;
+  const shop = `<li><a onclick="navigate('shop')">${t('bc_shop')}</a></li>`;
+  const ords = `<li><a onclick="navigate('orders')">${t('bc_orders')}</a></li>`;
+  let html = '';
+  if (p === 'shop') html = home + `<li>${t('bc_shop')}</li>`;
+  if (p === 'article') html = home + shop + `<li>${pn(state.currentArticle)}</li>`;
+  if (p === 'cart') html = home + shop + `<li>${t('bc_cart')}</li>`;
+  if (p === 'done') html = home + `<li>${t('bc_confirm')}</li>`;
+  if (p === 'orders') html = home + `<li>${t('bc_orders')}</li>`;
+  if (p === 'order') html = home + ords + `<li>${state.currentOrder || ''}</li>`;
+  if (p === 'login') html = home + `<li>${t('pp_signin')}</li>`;
+  const bc = document.getElementById('breadcrumb');
+  bc.innerHTML = html; bc.classList.toggle('hidden', !html);
+}
+
+/* ================================================================
+   AUTH
+   ================================================================ */
+function signIn() {
+  state.loggedIn = true;
+  trace('<b>POST</b> /_services/auth → Entra External ID, contact linked to account ' + CONFIG.customer.accountId);
+  navigate('home');
+}
+function signOut() { state.loggedIn = false; state.cart = []; navigate('home'); }
+
+/* ================================================================
+   HOME
+   ================================================================ */
+function statusBadge(o) { return `<span class="badge bg-${o.statusType === 'success' ? 'success' : 'info'}">${t(o.statusKey)}</span>`; }
+function deliveryText(o) { return o.deliveryKey ? t(o.deliveryKey) : termLabel(o.deliveryTerm, true); }
+
+function renderHome() {
+  const c = CONFIG.customer, auth = state.loggedIn;
+  document.getElementById('home-anon').classList.toggle('hidden', auth);
+  document.getElementById('home-auth').classList.toggle('hidden', !auth);
+  const hb = document.getElementById('hero-btn');
+  hb.textContent = auth ? t('nav_shop') : t('pp_signin');
+  hb.onclick = () => auth ? navigate('shop') : navigate('login');
+  if (!auth) return;
+
+  document.getElementById('home-greeting').textContent = t('greeting', { name: c.firstName });
+  document.getElementById('home-alert').innerHTML = `<strong>${t('n2_t')}.</strong> ${t('n2_s')}. <a onclick="navigate('article','2002001')">${t('reorder')}</a>`;
+  document.getElementById('adv-name').textContent = c.am.name;
+  document.getElementById('adv-role').textContent = t('adv_role');
+  document.getElementById('adv-contact').textContent = c.am.phone + ' · ' + c.am.email;
+  document.getElementById('home-orders').innerHTML = CONFIG.orders.filter(o => o.statusType !== 'success').slice(0, 3).map(o =>
+    `<tr><td><a onclick="navigate('order','${o.id}')">${o.id}</a></td><td>${fmtDate(daysFromNow(-o.ago))}</td><td>${deliveryText(o)}</td><td>${statusBadge(o)}</td></tr>`).join('');
+}
+
+/* ================================================================
+   ORDER FEED LIST
+   ================================================================ */
+function renderShop() {
+  const s = state.shop;
+  const gsel = document.getElementById('shop-group');
+  gsel.innerHTML = `<option value="all">${t('pp_all')}</option>` + CONFIG.categoryIds.map(id => `<option value="${id}">${cn(id)}</option>`).join('');
+  gsel.value = s.group;
+  const vsel = document.getElementById('shop-view');
+  vsel.innerHTML = `<option value="all">${t('pp_view_all')}</option><option value="favs">${t('pp_view_favs')}</option>`;
+  vsel.value = s.view;
+  document.getElementById('shop-q').value = s.q;
+  renderShopRows();
+}
+function shopSearch() { state.shop.q = document.getElementById('shop-q').value.trim(); state.shop.page = 1; renderShopRows(); }
+function shopFilter() { state.shop.group = document.getElementById('shop-group').value; state.shop.page = 1; renderShopRows(); }
+function shopView() { state.shop.view = document.getElementById('shop-view').value; state.shop.page = 1; renderShopRows(); }
+function shopSort(k) { const s = state.shop; if (s.sort === k) s.dir *= -1; else { s.sort = k; s.dir = 1; } renderShopRows(); }
+function shopPage(n) { state.shop.page = n; renderShopRows(); }
+
+function renderShopRows() {
+  const s = state.shop, q = s.q.toLowerCase();
+  let list = CONFIG.products.filter(p =>
+    (s.group === 'all' || p.cat === s.group) &&
+    (s.view === 'all' || state.favs.includes(p.id)) &&
+    (!q || pn(p.id).toLowerCase().includes(q) || p.id.includes(q) || ps(p.id).toLowerCase().includes(q)));
+  const val = p => s.sort === 'id' ? p.id : (s.sort === 'cat' ? cn(p.cat) : pn(p.id));
+  list.sort((a, b) => val(a).localeCompare(val(b), L().locale) * s.dir);
+  ['id','name','cat'].forEach(k => document.getElementById('si-' + k).textContent = s.sort === k ? (s.dir === 1 ? '▲' : '▼') : '');
+
+  const pages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+  if (s.page > pages) s.page = pages;
+  const start = (s.page - 1) * PAGE_SIZE, slice = list.slice(start, start + PAGE_SIZE);
+  document.getElementById('shop-rows').innerHTML = slice.length ? slice.map(p => `<tr>
+      <td class="text-muted">${p.id}</td><td><a onclick="navigate('article','${p.id}')"><strong>${pn(p.id)}</strong></a></td>
+      <td>${ps(p.id)}</td><td>${cn(p.cat)}</td>
+      <td class="text-end"><button class="btn btn-outline btn-sm" onclick="navigate('article','${p.id}')">${t('btn_order')}</button></td></tr>`).join('')
+    : `<tr><td colspan="5" class="empty">${t('pp_no_records')}</td></tr>`;
+  document.getElementById('shop-count').textContent = list.length ? t('pp_showing', { a: start + 1, b: start + slice.length, n: list.length }) : '';
+  let pg = `<li class="page-item ${s.page === 1 ? 'disabled' : ''}"><a class="page-link" onclick="shopPage(${s.page - 1})">${t('pp_prev')}</a></li>`;
+  for (let i = 1; i <= pages; i++) pg += `<li class="page-item ${i === s.page ? 'active' : ''}"><a class="page-link" onclick="shopPage(${i})">${i}</a></li>`;
+  pg += `<li class="page-item ${s.page === pages ? 'disabled' : ''}"><a class="page-link" onclick="shopPage(${s.page + 1})">${t('pp_next')}</a></li>`;
+  document.getElementById('shop-pages').innerHTML = pages > 1 ? pg : '';
+}
+
+/* ================================================================
+   ORDER LINE FORM
+   ================================================================ */
+function renderArticle() {
+  const p = productById(state.currentArticle);
+  if (!p) return;
+  document.getElementById('article-name').textContent = pn(p.id);
+  document.getElementById('article-meta').textContent = ps(p.id);
+  document.getElementById('f-id').value = p.id;
+  document.getElementById('f-group').value = cn(p.cat);
+  document.getElementById('f-forms').value = p.forms.map(k => t('form_' + k + '_l')).join(', ');
+  document.getElementById('order-form').innerHTML = p.forms.map(k => `<option value="${k}">${t('form_' + k + '_l')}</option>`).join('');
+  document.getElementById('order-location').innerHTML = CONFIG.customer.locations.map((l, i) => `<option value="${i}">${locLabel(i)}</option>`).join('');
+  document.getElementById('order-term').innerHTML = termOptions().map(o => `<option value="${o.v}">${o.l}</option>`).join('');
+  document.getElementById('order-note').value = '';
+  renderSiloOptions();
+  onFormChange();
+}
+function renderSiloOptions() {
+  const i = +document.getElementById('order-location').value || 0, n = CONFIG.customer.locations[i].silos;
+  document.getElementById('order-silo').innerHTML = Array.from({ length: n }, (_, j) => `<option value="${j}">${siloLabel(i, j)}</option>`).join('');
+}
+function onFormChange() {
+  const f = CONFIG.forms[document.getElementById('order-form').value];
+  document.getElementById('silo-group').classList.toggle('hidden', !f.silo);
+  const q = document.getElementById('order-qty'); q.min = f.min; q.step = f.step; q.value = f.min;
+  fetchPrice();
+}
+function fetchPrice(manual) {
+  const p = productById(state.currentArticle);
+  if (!p) return;
+  const formKey = document.getElementById('order-form').value, f = CONFIG.forms[formKey];
+  const qty = Math.max(f.min, parseInt(document.getElementById('order-qty').value) || f.min);
+  document.getElementById('price-label').textContent = t('price_label', { unit: unitName(f.unitKey, 1) });
+  document.getElementById('qty-unit').textContent = unitName(f.unitKey, qty);
+  document.getElementById('qty-hint').textContent = t('qty_hint', { qty, unitQty: unitName(f.unitKey, qty), tons: fmtNum(qty * f.kg / 1000, 2), min: f.min, unitMin: unitName(f.unitKey, f.min) });
+  const el = document.getElementById('article-price');
+  el.innerHTML = '<span class="small text-muted">' + t('price_loading') + '</span>';
+  document.getElementById('article-price-sub').textContent = '';
+  const t0 = performance.now();
+  setTimeout(() => {
+    const r = priceFor(p, formKey, qty);
+    state.currentPrice = r.unit;
+    el.textContent = fmtEur(r.unit);
+    document.getElementById('article-price-sub').innerHTML = t('pp_total_excl') + ': <strong>' + fmtEur(r.unit * qty) + '</strong> · ' + fmtEur(r.perTon) + ' ' + t('pp_per_ton') +
+      (r.discount ? '<br>' + t('pp_volume_disc', { x: fmtNum(r.discount * 100, 1) }) : '');
+    trace(`<b>GET</b> /_api/dh_dailyprice?item=${p.id}&amp;qty=${qty}&amp;form=${formKey} → ${fmtEur(r.unit)} (${Math.round(performance.now() - t0)} ms, F&amp;O price discovery)`);
+  }, manual ? 700 : 350);
+}
+
+/* ================================================================
+   CART
+   ================================================================ */
+function addToCart(btn) {
+  const p = productById(state.currentArticle);
+  const formKey = document.getElementById('order-form').value, f = CONFIG.forms[formKey];
+  const qty = Math.max(f.min, parseInt(document.getElementById('order-qty').value) || f.min);
+  state.cart.push({
+    productId: p.id, formKey, qty,
+    locIdx: +document.getElementById('order-location').value || 0,
+    siloIdx: f.silo ? (+document.getElementById('order-silo').value || 0) : null,
+    term: document.getElementById('order-term').value, note: document.getElementById('order-note').value,
+    unitPrice: state.currentPrice || priceFor(p, formKey, qty).unit
+  });
+  trace(`<b>POST</b> /_api/dh_cartlines → line added (${qty} × ${formKey}, item ${p.id})`);
+  btn.textContent = t('added'); btn.disabled = true;
+  setTimeout(() => { btn.textContent = t('btn_add'); btn.disabled = false; navigate('cart'); }, 500);
+}
+function removeFromCart(i) { state.cart.splice(i, 1); renderCart(); updateChrome(); }
+
+function renderCart() {
+  const full = document.getElementById('cart-full'), empty = document.getElementById('cart-empty');
+  if (!state.cart.length) { full.classList.add('hidden'); empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden'); full.classList.remove('hidden');
+  document.getElementById('cart-rows').innerHTML = state.cart.map((it, i) => {
+    const f = CONFIG.forms[it.formKey];
+    return `<tr>
+      <td><strong>${pn(it.productId)}</strong><br><span class="small text-muted">${t('form_' + it.formKey + '_l')}</span>${it.note ? `<br><span class="small text-muted">${t('note_inline')} ${it.note.replace(/</g, '&lt;')}</span>` : ''}</td>
+      <td>${it.qty} ${unitName(f.unitKey, it.qty)}</td>
+      <td>${locLabel(it.locIdx)}${it.siloIdx !== null ? `<br><span class="small text-muted">${siloLabel(it.locIdx, it.siloIdx)}</span>` : ''}</td>
+      <td>${termLabel(it.term)}</td>
+      <td class="text-end">${fmtEur(it.qty * it.unitPrice)}</td>
+      <td class="text-end"><button class="btn btn-secondary btn-sm" onclick="removeFromCart(${i})">${t('remove')}</button></td></tr>`;
+  }).join('');
+  const sub = state.cart.reduce((s, i) => s + i.qty * i.unitPrice, 0);
+  const kg = state.cart.reduce((s, i) => s + i.qty * CONFIG.forms[i.formKey].kg, 0);
+  document.getElementById('summary-lines').textContent = state.cart.length;
+  document.getElementById('summary-weight').textContent = fmtNum(kg / 1000, 1) + ' t';
+  document.getElementById('summary-subtotal').textContent = fmtEur(sub);
+  document.getElementById('summary-vat-label').textContent = t('sum_vat', { p: Math.round(CONFIG.vatRate * 100) });
+  document.getElementById('summary-vat').textContent = fmtEur(sub * CONFIG.vatRate);
+  document.getElementById('summary-total').textContent = fmtEur(sub * (1 + CONFIG.vatRate));
+}
+
+function placeOrder() {
+  if (!state.cart.length) return;
+  state.orderCounter++;
+  const id = 'SO-2026-0' + state.orderCounter;
+  const sub = state.cart.reduce((s, i) => s + i.qty * i.unitPrice, 0);
+  const kg = state.cart.reduce((s, i) => s + i.qty * CONFIG.forms[i.formKey].kg, 0);
+  CONFIG.orders.unshift({ id, ago: 0, lines: state.cart.length, kg, deliveryTerm: state.cart[0].term, total: sub * (1 + CONFIG.vatRate), statusKey: "st_sent", statusType: "info",
+    lineItems: state.cart.map(i => ({ pid: i.productId, formKey: i.formKey, qty: i.qty, net: i.qty * i.unitPrice })) });
+  trace(`<b>POST</b> /_api/dh_placeorder → Power Automate → F&amp;O SalesOrderHeaderV2 ${id} (${state.cart.length} lines)`);
+  state.lastOrder = id; state.cart = [];
+  navigate('done');
+}
+
+/* ================================================================
+   ORDERS LIST + DETAILS
+   ================================================================ */
+function renderOrders() {
+  const sel = document.getElementById('orders-view');
+  sel.innerHTML = `<option value="all">${t('pp_view_orders_all')}</option><option value="open">${t('c_open')}</option>`;
+  sel.value = state.ordersView;
+  const list = CONFIG.orders.filter(o => state.ordersView === 'all' || o.statusType !== 'success');
+  document.getElementById('orders-rows').innerHTML = list.length ? list.map(o => `<tr>
+    <td><a onclick="navigate('order','${o.id}')"><strong>${o.id}</strong></a></td><td>${fmtDate(daysFromNow(-o.ago))}</td><td>${o.lines}</td>
+    <td>${fmtNum(o.kg / 1000, 1)} t</td><td>${deliveryText(o)}</td><td class="text-end">${fmtEur(o.total)}</td><td>${statusBadge(o)}</td></tr>`).join('')
+    : `<tr><td colspan="7" class="empty">${t('pp_no_records')}</td></tr>`;
+  document.getElementById('orders-count').textContent = list.length ? t('pp_showing', { a: 1, b: list.length, n: list.length }) : '';
+  trace('<b>GET</b> /_api/salesorders?$filter=account eq ' + CONFIG.customer.accountId + ' → ' + CONFIG.orders.length + ' orders (virtual table)');
+}
+function ordersView() { state.ordersView = document.getElementById('orders-view').value; renderOrders(); }
+
+function orderLines(o) {
+  if (o.lineItems) return o.lineItems;
+  const items = [], n = o.lines, net = o.total / (1 + CONFIG.vatRate);
+  let rawSum = 0;
+  for (let i = 0; i < n; i++) {
+    const p = CONFIG.products[Math.floor(seed(o.id + i) * CONFIG.products.length)];
+    const formKey = p.forms.includes('bulk') ? 'bulk' : p.forms[0], f = CONFIG.forms[formKey];
+    const qty = Math.max(1, Math.round((o.kg / n) / f.kg));
+    const raw = priceFor(p, formKey, qty).unit * qty;
+    rawSum += raw; items.push({ pid: p.id, formKey, qty, net: raw });
+  }
+  items.forEach(it => it.net = it.net * net / rawSum);
+  return items;
+}
+function renderOrderDetail() {
+  const o = CONFIG.orders.find(x => x.id === state.currentOrder);
+  if (!o) return;
+  document.getElementById('order-title').textContent = t('pp_order_title', { id: o.id });
+  document.getElementById('o-id').value = o.id;
+  document.getElementById('o-date').value = fmtDate(daysFromNow(-o.ago));
+  document.getElementById('o-status').value = t(o.statusKey);
+  document.getElementById('o-delivery').value = deliveryText(o);
+  document.getElementById('o-weight').value = fmtNum(o.kg / 1000, 1) + ' t';
+  document.getElementById('o-total').value = fmtEur(o.total);
+  document.getElementById('o-lines').innerHTML = orderLines(o).map(it => `<tr><td>${pn(it.pid)}</td><td>${it.qty} ${unitName(CONFIG.forms[it.formKey].unitKey, it.qty)}</td><td class="text-end">${fmtEur(it.net)}</td></tr>`).join('');
+}
+
+/* ================================================================
+   INIT
+   ================================================================ */
+applyI18n();
+navigate('home');
+</script>
+</body>
+</html>
